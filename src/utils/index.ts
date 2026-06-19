@@ -253,6 +253,77 @@ export function getDepartmentFilteredRanking(
   return ranking;
 }
 
+export interface WeeklyChampion {
+  employee: Employee;
+  records: number;
+  totalLiters: number;
+  likes: number;
+}
+
+export function getLastWeekRange(): { start: Date; end: Date; weekKey: string } {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+  const lastMonday = new Date(thisMonday);
+  lastMonday.setDate(lastMonday.getDate() - 7);
+  const lastSunday = new Date(lastMonday);
+  lastSunday.setDate(lastSunday.getDate() + 6);
+  lastSunday.setHours(23, 59, 59, 999);
+  const weekKey = `${lastMonday.getFullYear()}-${String(lastMonday.getMonth() + 1).padStart(2, '0')}-${String(lastMonday.getDate()).padStart(2, '0')}`;
+  return { start: lastMonday, end: lastSunday, weekKey };
+}
+
+export function getLastWeekChampions(
+  records: WaterRecord[],
+  employees: Employee[]
+): { champions: WeeklyChampion[]; weekKey: string; weekLabel: string } | null {
+  const { start, end, weekKey } = getLastWeekRange();
+
+  const weekRecords = records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d >= start && d <= end;
+  });
+
+  if (weekRecords.length === 0) return null;
+
+  const empMap = new Map<string, { records: number; likes: number; totalLiters: number }>();
+  weekRecords.forEach(r => {
+    const existing = empMap.get(r.employeeId) || { records: 0, likes: 0, totalLiters: 0 };
+    const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+    empMap.set(r.employeeId, {
+      records: existing.records + 1,
+      likes: existing.likes + r.likes,
+      totalLiters: existing.totalLiters + liters,
+    });
+  });
+
+  const maxRecords = Math.max(...Array.from(empMap.values()).map(d => d.records));
+  if (maxRecords === 0) return null;
+
+  const championIds = Array.from(empMap.entries())
+    .filter(([_, d]) => d.records === maxRecords)
+    .map(([id]) => id);
+
+  const champions: WeeklyChampion[] = championIds.map(id => {
+    const data = empMap.get(id)!;
+    const employee = employees.find(e => e.id === id);
+    if (!employee) return null;
+    return {
+      employee,
+      records: data.records,
+      totalLiters: Math.round(data.totalLiters * 10) / 10,
+      likes: data.likes,
+    };
+  }).filter((c): c is WeeklyChampion => c !== null);
+
+  if (champions.length === 0) return null;
+
+  const weekLabel = `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`;
+
+  return { champions, weekKey, weekLabel };
+}
+
 export function getEmployeeTotalComments(employeeId: string, records: WaterRecord[], comments: Comment[]): number {
   const employeeRecordIds = new Set(records.filter(r => r.employeeId === employeeId).map(r => r.id));
   return comments.filter(c => employeeRecordIds.has(c.recordId)).length;

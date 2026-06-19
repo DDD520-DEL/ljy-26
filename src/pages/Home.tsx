@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getMonthlyRanking, formatMonthLabel } from '@/utils';
+import { getMonthlyRanking, formatMonthLabel, getLastWeekChampions } from '@/utils';
 import type { Department } from '@/types';
 import { DEPARTMENTS } from '@/constants';
 import Top3Hero from '@/components/Top3Hero';
 import ActivityItem from '@/components/ActivityItem';
 import FloatingButton from '@/components/FloatingButton';
+import WeeklyChampionCard from '@/components/WeeklyChampionCard';
 
 export default function Home() {
   const { employees, records } = useAppStore();
@@ -36,6 +37,11 @@ export default function Home() {
 
   const recentRecords = useMemo(() => filteredRecords.slice(0, 15), [filteredRecords]);
 
+  const weeklyChampionData = useMemo(
+    () => getLastWeekChampions(records, employees),
+    [records, employees]
+  );
+
   const monthlyStats = useMemo(() => {
     const monthRecords = filteredRecords.filter(r => {
       const d = new Date(r.timestamp);
@@ -63,6 +69,14 @@ export default function Home() {
 
   return (
     <div className="space-y-8 md:space-y-12">
+      {weeklyChampionData && (
+        <WeeklyChampionCard
+          champions={weeklyChampionData.champions}
+          weekLabel={weeklyChampionData.weekLabel}
+          weekKey={weeklyChampionData.weekKey}
+        />
+      )}
+
       <section className="animate-fade-in-up">
         <div className="relative overflow-hidden rounded-3xl bg-water-gradient p-6 md:p-10 text-white shadow-water">
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
