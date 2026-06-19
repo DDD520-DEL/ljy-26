@@ -359,3 +359,49 @@ export function generateMockComments(employees: Employee[], records: WaterRecord
 
   return comments;
 }
+
+export interface ExportDataItem {
+  rank: number;
+  name: string;
+  records: number;
+  likes: number;
+  badge: string;
+}
+
+export function formatDateForFilename(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+export function exportToExcel(data: ExportDataItem[], sheetName: string, filename: string): void {
+  import('xlsx').then((XLSX) => {
+    const worksheetData = [
+      ['排名', '姓名', '换水次数', '点赞数', '称号'],
+      ...data.map(item => [
+        item.rank,
+        item.name,
+        item.records,
+        item.likes,
+        item.badge,
+      ]),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    const colWidths = [
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 15 },
+    ];
+    worksheet['!cols'] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+  });
+}

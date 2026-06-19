@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Trophy, Heart, Users, ChevronDown, BarChart3 } from 'lucide-react';
+import { Trophy, Heart, Users, ChevronDown, BarChart3, Download } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getMonthlyRanking, getAvailableMonths, formatMonthLabel } from '@/utils';
+import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem } from '@/utils';
 import type { Department } from '@/types';
 import { DEPARTMENTS } from '@/constants';
 import Top3Hero from '@/components/Top3Hero';
@@ -48,6 +48,23 @@ export default function Ranking() {
 
   const rankBadges = ['🥇', '🥈', '🥉'];
 
+  const handleExport = () => {
+    const exportData: ExportDataItem[] = ranking.map((entry, idx) => ({
+      rank: idx + 1,
+      name: entry.employee.name,
+      records: entry.records,
+      likes: entry.likes,
+      badge: entry.badge.name,
+    }));
+
+    const dateStr = formatDateForFilename(new Date());
+    const monthLabel = formatMonthLabel(selectedMonth.year, selectedMonth.month).replace(/年|月/g, '');
+    const filename = `月度排行榜_${monthLabel}_${dateStr}`;
+    const sheetName = formatMonthLabel(selectedMonth.year, selectedMonth.month);
+
+    exportToExcel(exportData, sheetName, filename);
+  };
+
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="animate-fade-in-up">
@@ -62,34 +79,45 @@ export default function Ranking() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2.5 bg-white rounded-xl shadow-card hover:shadow-md transition-all border border-water-50"
+              onClick={handleExport}
+              disabled={ranking.length === 0}
+              className="flex items-center gap-2 px-4 py-2.5 bg-water-500 text-white rounded-xl shadow-card hover:bg-water-600 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="font-semibold text-slate-700">{formatMonthLabel(selectedMonth.year, selectedMonth.month)}</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <Download className="w-4 h-4" />
+              <span className="font-semibold text-sm">导出</span>
             </button>
-            {isDropdownOpen && (
-              <div className="absolute top-full mt-2 left-0 right-0 md:w-48 bg-white rounded-xl shadow-xl border border-water-50 overflow-hidden z-20 animate-bounce-in">
-                {availableMonths.map(month => (
-                  <button
-                    key={`${month.year}-${month.month}`}
-                    onClick={() => {
-                      setSelectedMonth(month);
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left text-sm transition-colors ${
-                      month.year === selectedMonth.year && month.month === selectedMonth.month
-                        ? 'bg-water-50 text-water-600 font-semibold'
-                        : 'text-slate-600 hover:bg-water-50/50'
-                    }`}
-                  >
-                    {month.label}
-                  </button>
-                ))}
-              </div>
-            )}
+
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2.5 bg-white rounded-xl shadow-card hover:shadow-md transition-all border border-water-50"
+              >
+                <span className="font-semibold text-slate-700">{formatMonthLabel(selectedMonth.year, selectedMonth.month)}</span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute top-full mt-2 left-0 right-0 md:w-48 bg-white rounded-xl shadow-xl border border-water-50 overflow-hidden z-20 animate-bounce-in">
+                  {availableMonths.map(month => (
+                    <button
+                      key={`${month.year}-${month.month}`}
+                      onClick={() => {
+                        setSelectedMonth(month);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-sm transition-colors ${
+                        month.year === selectedMonth.year && month.month === selectedMonth.month
+                          ? 'bg-water-50 text-water-600 font-semibold'
+                          : 'text-slate-600 hover:bg-water-50/50'
+                      }`}
+                    >
+                      {month.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Award, Heart, Droplets, Target, ChevronRight, Building2, MessageCircle } from 'lucide-react';
+import { Award, Heart, Droplets, Target, ChevronRight, Building2, MessageCircle, Download } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats, getEmployeeTotalComments } from '@/utils';
+import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats, getEmployeeTotalComments, exportToExcel, formatDateForFilename, type ExportDataItem } from '@/utils';
 import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
 import FloatingButton from '@/components/FloatingButton';
 
@@ -31,17 +31,43 @@ export default function HallOfFame() {
       });
   }, [employees, records, comments]);
 
+  const handleExport = () => {
+    const exportData: ExportDataItem[] = employeesWithStats.map((stat, idx) => ({
+      rank: idx + 1,
+      name: stat.employee.name,
+      records: stat.totalRecords,
+      likes: stat.totalLikes,
+      badge: stat.current.name,
+    }));
+
+    const dateStr = formatDateForFilename(new Date());
+    const filename = `荣誉墙_累计数据_${dateStr}`;
+
+    exportToExcel(exportData, '荣誉墙', filename);
+  };
+
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="animate-fade-in-up">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-purple-100 flex items-center justify-center">
-            <Award className="w-6 h-6 md:w-7 md:h-7 text-purple-500" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-purple-100 flex items-center justify-center">
+              <Award className="w-6 h-6 md:w-7 md:h-7 text-purple-500" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl md:text-3xl text-slate-800">英雄荣誉墙</h1>
+              <p className="text-sm text-slate-400">累计数据统计，见证每一位英雄的成长！</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl md:text-3xl text-slate-800">英雄荣誉墙</h1>
-            <p className="text-sm text-slate-400">累计数据统计，见证每一位英雄的成长！</p>
-          </div>
+
+          <button
+            onClick={handleExport}
+            disabled={employeesWithStats.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-500 text-white rounded-xl shadow-card hover:bg-purple-600 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            <span className="font-semibold text-sm">导出</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
