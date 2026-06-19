@@ -44,6 +44,14 @@ export interface BadgeConfig {
   bgColor: string;
 }
 
+export interface Comment {
+  id: string;
+  recordId: string;
+  employeeId: string;
+  content: string;
+  timestamp: string;
+}
+
 export interface RankingEntry {
   employee: Employee;
   records: number;

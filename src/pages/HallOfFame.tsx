@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
-import { Award, Heart, Droplets, Target, ChevronRight, Building2 } from 'lucide-react';
+import { Award, Heart, Droplets, Target, ChevronRight, Building2, MessageCircle } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats } from '@/utils';
+import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats, getEmployeeTotalComments } from '@/utils';
 import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
 import FloatingButton from '@/components/FloatingButton';
 
 export default function HallOfFame() {
-  const { employees, records } = useAppStore();
+  const { employees, records, comments } = useAppStore();
 
   const departmentStats = useMemo(
     () => getDepartmentStats(employees, records),
@@ -20,14 +20,16 @@ export default function HallOfFame() {
       .map(emp => {
         const totalRecords = getEmployeeTotalRecords(emp.id, records);
         const totalLikes = getEmployeeTotalLikes(emp.id, records);
+        const totalComments = getEmployeeTotalComments(emp.id, records, comments);
         const progress = getNextBadgeProgress(totalRecords);
-        return { employee: emp, totalRecords, totalLikes, ...progress };
+        return { employee: emp, totalRecords, totalLikes, totalComments, ...progress };
       })
       .sort((a, b) => {
         if (b.totalRecords !== a.totalRecords) return b.totalRecords - a.totalRecords;
+        if (b.totalComments !== a.totalComments) return b.totalComments - a.totalComments;
         return b.totalLikes - a.totalLikes;
       });
-  }, [employees, records]);
+  }, [employees, records, comments]);
 
   return (
     <div className="space-y-8 md:space-y-10">
@@ -191,20 +193,27 @@ export default function HallOfFame() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-water-50/80 rounded-xl p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <Droplets className="w-3.5 h-3.5 text-water-500" />
-                        <span className="text-[11px] text-slate-500">累计换水</span>
+                  <div className="grid grid-cols-3 gap-2.5 mb-4">
+                    <div className="bg-water-50/80 rounded-xl p-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <Droplets className="w-3 h-3 text-water-500" />
+                        <span className="text-[10px] text-slate-500">换水</span>
                       </div>
-                      <div className="font-display text-2xl gradient-text">{stat.totalRecords}</div>
+                      <div className="font-display text-xl gradient-text">{stat.totalRecords}</div>
                     </div>
-                    <div className="bg-rose-50/80 rounded-xl p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-                        <span className="text-[11px] text-slate-500">累计点赞</span>
+                    <div className="bg-amber-50/80 rounded-xl p-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <MessageCircle className="w-3 h-3 text-amber-500 fill-amber-200" />
+                        <span className="text-[10px] text-slate-500">评论</span>
                       </div>
-                      <div className="font-display text-2xl text-rose-500">{stat.totalLikes}</div>
+                      <div className="font-display text-xl text-amber-500">{stat.totalComments}</div>
+                    </div>
+                    <div className="bg-rose-50/80 rounded-xl p-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
+                        <span className="text-[10px] text-slate-500">点赞</span>
+                      </div>
+                      <div className="font-display text-xl text-rose-500">{stat.totalLikes}</div>
                     </div>
                   </div>
 

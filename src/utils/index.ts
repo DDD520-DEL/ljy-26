@@ -1,5 +1,5 @@
-import type { WaterRecord, Employee, RankingEntry, BadgeConfig, Department, DepartmentConfig } from '@/types';
-import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
+import type { WaterRecord, Employee, RankingEntry, BadgeConfig, Department, DepartmentConfig, Comment } from '@/types';
+import { BADGE_LEVELS, DEPARTMENTS, ENCOURAGE_MESSAGES } from '@/constants';
 
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -251,4 +251,40 @@ export function getDepartmentFilteredRanking(
   });
 
   return ranking;
+}
+
+export function getEmployeeTotalComments(employeeId: string, records: WaterRecord[], comments: Comment[]): number {
+  const employeeRecordIds = new Set(records.filter(r => r.employeeId === employeeId).map(r => r.id));
+  return comments.filter(c => employeeRecordIds.has(c.recordId)).length;
+}
+
+export function getRecordCommentsCount(recordId: string, comments: Comment[]): number {
+  return comments.filter(c => c.recordId === recordId).length;
+}
+
+export function generateMockComments(employees: Employee[], records: WaterRecord[]): Comment[] {
+  const comments: Comment[] = [];
+  const now = Date.now();
+
+  records.slice(0, 12).forEach(record => {
+    const commentCount = Math.floor(Math.random() * 4);
+    for (let i = 0; i < commentCount; i++) {
+      const commenter = employees[Math.floor(Math.random() * employees.length)];
+      if (commenter.id === record.employeeId && Math.random() > 0.3) continue;
+      const recordTime = new Date(record.timestamp).getTime();
+      const hoursAfter = Math.floor(Math.random() * 48);
+      const timestamp = new Date(recordTime + hoursAfter * 3600000).toISOString();
+      if (new Date(timestamp).getTime() > now) continue;
+
+      comments.push({
+        id: generateId(),
+        recordId: record.id,
+        employeeId: commenter.id,
+        content: ENCOURAGE_MESSAGES[Math.floor(Math.random() * ENCOURAGE_MESSAGES.length)],
+        timestamp,
+      });
+    }
+  });
+
+  return comments;
 }

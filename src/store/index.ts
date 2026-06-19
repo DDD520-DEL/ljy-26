@@ -1,18 +1,20 @@
 import { create } from 'zustand';
-import type { Employee, WaterRecord, BucketType, Department } from '@/types';
+import type { Employee, WaterRecord, BucketType, Department, Comment } from '@/types';
 import { INITIAL_EMPLOYEES, STORAGE_KEY } from '@/constants';
-import { generateId, generateMockRecords } from '@/utils';
+import { generateId, generateMockRecords, generateMockComments } from '@/utils';
 
 interface PersistedStateRaw {
   employees: Employee[];
   records: WaterRecord[];
   likedRecordIds: string[];
+  comments: Comment[];
 }
 
 interface PersistedState {
   employees: Employee[];
   records: WaterRecord[];
   likedRecords: Set<string>;
+  comments: Comment[];
 }
 
 interface AppState extends PersistedState {
@@ -20,6 +22,8 @@ interface AppState extends PersistedState {
   addEmployee: (name: string, avatar: string, department: Department) => Employee;
   likeRecord: (recordId: string) => void;
   isRecordLiked: (recordId: string) => boolean;
+  addComment: (recordId: string, employeeId: string, content: string) => Comment;
+  getCommentsByRecord: (recordId: string) => Comment[];
 }
 
 function serializeState(state: PersistedState): PersistedStateRaw {
@@ -27,6 +31,7 @@ function serializeState(state: PersistedState): PersistedStateRaw {
     employees: state.employees,
     records: state.records,
     likedRecordIds: Array.from(state.likedRecords),
+    comments: state.comments,
   };
 }
 
@@ -35,6 +40,7 @@ function deserializeState(raw: PersistedStateRaw): PersistedState {
     employees: raw.employees,
     records: raw.records,
     likedRecords: new Set(raw.likedRecordIds || []),
+    comments: raw.comments || [],
   };
 }
 
@@ -67,10 +73,12 @@ function getInitialState(): PersistedState {
 
   const employees = [...INITIAL_EMPLOYEES];
   const records = generateMockRecords(employees);
+  const comments = generateMockComments(employees, records);
   const initial: PersistedState = {
     employees,
     records,
     likedRecords: new Set<string>(),
+    comments,
   };
   saveToStorage(initial);
   return initial;
@@ -139,12 +147,37 @@ export const useAppStore = create<AppState>((set, get) => ({
     const likedRecords = new Set(state.likedRecords);
     likedRecords.add(recordId);
 
-    const newState = { employees, records, likedRecords };
+    const newState = { employees, records, likedRecords, comments: state.comments };
     saveToStorage(newState);
     set(newState);
   },
 
   isRecordLiked: (recordId: string): boolean => {
     return get().likedRecords.has(recordId);
+  },
+
+  addComment: (recordId: string, employeeId: string, content: string): Comment => {
+    const newComment: Comment = {
+      id: generateId(),
+      recordId,
+      employeeId,
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
+    set(state => {
+      const comments = [...state.comments, newComment];
+      const newState = { ...state, comments };
+      saveToStorage(newState);
+      return { comments };
+    });
+
+    return newComment;
+  },
+
+  getCommentsByRecord: (recordId: string): Comment[] => {
+    return get().comments
+      .filter(c => c.recordId === recordId)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   },
 }));
