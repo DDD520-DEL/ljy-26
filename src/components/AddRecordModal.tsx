@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Plus, Check, Sparkles } from 'lucide-react';
-import type { BucketType } from '@/types';
-import { BUCKET_TYPES, AVATAR_OPTIONS, ENCOURAGE_MESSAGES } from '@/constants';
+import type { BucketType, Department } from '@/types';
+import { BUCKET_TYPES, AVATAR_OPTIONS, ENCOURAGE_MESSAGES, DEPARTMENTS } from '@/constants';
 import { useAppStore } from '@/store';
 
 interface AddRecordModalProps {
@@ -16,6 +16,7 @@ export default function AddRecordModal({ isOpen, onClose }: AddRecordModalProps)
   const [showNewEmployee, setShowNewEmployee] = useState(false);
   const [newName, setNewName] = useState('');
   const [newAvatar, setNewAvatar] = useState(AVATAR_OPTIONS[0]);
+  const [newDepartment, setNewDepartment] = useState<Department>('rd');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -25,7 +26,7 @@ export default function AddRecordModal({ isOpen, onClose }: AddRecordModalProps)
 
     let empId = selectedEmployee;
     if (showNewEmployee && newName.trim()) {
-      const newEmp = addEmployee(newName.trim(), newAvatar);
+      const newEmp = addEmployee(newName.trim(), newAvatar, newDepartment);
       empId = newEmp.id;
     }
 
@@ -50,6 +51,7 @@ export default function AddRecordModal({ isOpen, onClose }: AddRecordModalProps)
     setShowNewEmployee(false);
     setNewName('');
     setNewAvatar(AVATAR_OPTIONS[0]);
+    setNewDepartment('rd');
     setShowSuccess(false);
     onClose();
   };
@@ -170,6 +172,25 @@ export default function AddRecordModal({ isOpen, onClose }: AddRecordModalProps)
                             }`}
                           >
                             {avatar}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-500 mb-1.5 block">所属部门</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {DEPARTMENTS.map(dept => (
+                          <button
+                            key={dept.id}
+                            onClick={() => setNewDepartment(dept.id)}
+                            className={`p-3 rounded-xl border-2 transition-all duration-200 text-center ${
+                              newDepartment === dept.id
+                                ? 'border-water-500 bg-water-50 scale-105 shadow-md'
+                                : 'border-slate-100 hover:border-water-200 hover:bg-water-50/50'
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{dept.icon}</div>
+                            <div className="text-xs font-medium text-slate-700">{dept.name}</div>
                           </button>
                         ))}
                       </div>

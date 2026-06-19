@@ -1,14 +1,20 @@
-import type { Employee, BucketConfig, BadgeConfig } from '@/types';
+import type { Employee, BucketConfig, BadgeConfig, DepartmentConfig } from '@/types';
+
+export const DEPARTMENTS: DepartmentConfig[] = [
+  { id: 'rd', name: '研发部', icon: '💻', color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  { id: 'marketing', name: '市场部', icon: '📢', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  { id: 'admin', name: '行政部', icon: '📋', color: 'text-green-600', bgColor: 'bg-green-100' },
+];
 
 export const INITIAL_EMPLOYEES: Employee[] = [
-  { id: '1', name: '张伟', avatar: '👨‍💼', totalLikes: 0 },
-  { id: '2', name: '李娜', avatar: '👩‍💼', totalLikes: 0 },
-  { id: '3', name: '王强', avatar: '👨‍🔧', totalLikes: 0 },
-  { id: '4', name: '刘芳', avatar: '👩‍🎨', totalLikes: 0 },
-  { id: '5', name: '陈明', avatar: '👨‍💻', totalLikes: 0 },
-  { id: '6', name: '赵丽', avatar: '👩‍🔬', totalLikes: 0 },
-  { id: '7', name: '孙磊', avatar: '👨‍🎨', totalLikes: 0 },
-  { id: '8', name: '周雪', avatar: '👩‍🏫', totalLikes: 0 },
+  { id: '1', name: '张伟', avatar: '👨‍💼', totalLikes: 0, department: 'rd' },
+  { id: '2', name: '李娜', avatar: '👩‍💼', totalLikes: 0, department: 'rd' },
+  { id: '3', name: '王强', avatar: '👨‍🔧', totalLikes: 0, department: 'rd' },
+  { id: '4', name: '刘芳', avatar: '👩‍🎨', totalLikes: 0, department: 'marketing' },
+  { id: '5', name: '陈明', avatar: '👨‍💻', totalLikes: 0, department: 'marketing' },
+  { id: '6', name: '赵丽', avatar: '👩‍🔬', totalLikes: 0, department: 'marketing' },
+  { id: '7', name: '孙磊', avatar: '👨‍🎨', totalLikes: 0, department: 'admin' },
+  { id: '8', name: '周雪', avatar: '👩‍🏫', totalLikes: 0, department: 'admin' },
 ];
 
 export const BUCKET_TYPES: BucketConfig[] = [
@@ -30,7 +36,7 @@ export const AVATAR_OPTIONS = [
   '👨‍🚀', '👩‍🚀', '🧑‍💻', '🧑‍🎤', '👨‍🍳', '👩‍🍳', '🧑‍🔬', '🧑‍🏭',
 ];
 
-export const STORAGE_KEY = 'water-hero-data-v1';
+export const STORAGE_KEY = 'water-hero-data-v2';
 
 export const ENCOURAGE_MESSAGES = [
   '每一滴水都是爱的传递！',

@@ -1,5 +1,5 @@
-import type { WaterRecord, Employee, RankingEntry, BadgeConfig } from '@/types';
-import { BADGE_LEVELS } from '@/constants';
+import type { WaterRecord, Employee, RankingEntry, BadgeConfig, Department, DepartmentConfig } from '@/types';
+import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
 
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -168,4 +168,87 @@ export function generateMockRecords(employees: Employee[]): WaterRecord[] {
 
   records.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return records;
+}
+
+export interface DepartmentStats {
+  department: DepartmentConfig;
+  totalRecords: number;
+  totalLiters: number;
+  totalLikes: number;
+  employeeCount: number;
+}
+
+export function getDepartmentStats(
+  employees: Employee[],
+  records: WaterRecord[]
+): DepartmentStats[] {
+  return DEPARTMENTS.map(dept => {
+    const deptEmployees = employees.filter(e => e.department === dept.id);
+    const deptEmployeeIds = new Set(deptEmployees.map(e => e.id));
+    const deptRecords = records.filter(r => deptEmployeeIds.has(r.employeeId));
+
+    const totalLiters = deptRecords.reduce((sum, r) => {
+      const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+      return sum + liters;
+    }, 0);
+
+    const totalLikes = deptRecords.reduce((sum, r) => sum + r.likes, 0);
+
+    return {
+      department: dept,
+      totalRecords: deptRecords.length,
+      totalLiters: Math.round(totalLiters * 10) / 10,
+      totalLikes,
+      employeeCount: deptEmployees.length,
+    };
+  }).sort((a, b) => b.totalRecords - a.totalRecords);
+}
+
+export function getDepartmentFilteredRanking(
+  records: WaterRecord[],
+  employees: Employee[],
+  year: number,
+  month: number,
+  department?: Department
+): RankingEntry[] {
+  const filtered = records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  const deptEmployees = department
+    ? employees.filter(e => e.department === department)
+    : employees;
+  const deptEmployeeIds = new Set(deptEmployees.map(e => e.id));
+
+  const map = new Map<string, { records: number; likes: number }>();
+
+  filtered.forEach(r => {
+    if (!deptEmployeeIds.has(r.employeeId)) return;
+    const existing = map.get(r.employeeId) || { records: 0, likes: 0 };
+    map.set(r.employeeId, {
+      records: existing.records + 1,
+      likes: existing.likes + r.likes,
+    });
+  });
+
+  const ranking: RankingEntry[] = [];
+  map.forEach((data, empId) => {
+    const employee = employees.find(e => e.id === empId);
+    if (employee) {
+      ranking.push({
+        employee,
+        records: data.records,
+        likes: data.likes,
+        badge: getEmployeeBadge(data.records),
+      });
+    }
+  });
+
+  ranking.sort((a, b) => {
+    if (b.records !== a.records) return b.records - a.records;
+    return b.likes - a.likes;
+  });
+
+  return ranking;
 }

@@ -1,29 +1,43 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, formatMonthLabel } from '@/utils';
+import type { Department } from '@/types';
+import { DEPARTMENTS } from '@/constants';
 import Top3Hero from '@/components/Top3Hero';
 import ActivityItem from '@/components/ActivityItem';
 import FloatingButton from '@/components/FloatingButton';
 
 export default function Home() {
   const { employees, records } = useAppStore();
+  const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
 
   const now = useMemo(() => new Date(), []);
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
   const monthLabel = formatMonthLabel(currentYear, currentMonth);
 
+  const filteredEmployees = useMemo(() => {
+    if (selectedDept === 'all') return employees;
+    return employees.filter(e => e.department === selectedDept);
+  }, [employees, selectedDept]);
+
+  const filteredRecords = useMemo(() => {
+    if (selectedDept === 'all') return records;
+    const deptIds = new Set(filteredEmployees.map(e => e.id));
+    return records.filter(r => deptIds.has(r.employeeId));
+  }, [records, filteredEmployees, selectedDept]);
+
   const monthlyRanking = useMemo(
-    () => getMonthlyRanking(records, employees, currentYear, currentMonth),
-    [records, employees, currentYear, currentMonth]
+    () => getMonthlyRanking(filteredRecords, filteredEmployees, currentYear, currentMonth),
+    [filteredRecords, filteredEmployees, currentYear, currentMonth]
   );
 
-  const recentRecords = useMemo(() => records.slice(0, 15), [records]);
+  const recentRecords = useMemo(() => filteredRecords.slice(0, 15), [filteredRecords]);
 
   const monthlyStats = useMemo(() => {
-    const monthRecords = records.filter(r => {
+    const monthRecords = filteredRecords.filter(r => {
       const d = new Date(r.timestamp);
       return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
     });
@@ -38,7 +52,7 @@ export default function Home() {
       liters: totalLiters.toFixed(1),
       people: new Set(monthRecords.map(r => r.employeeId)).size,
     };
-  }, [records, currentYear, currentMonth]);
+  }, [filteredRecords, currentYear, currentMonth]);
 
   const stats = [
     { label: '本月换水', value: monthlyStats.records, icon: '🪣', color: 'from-blue-400 to-water-600' },
@@ -86,6 +100,38 @@ export default function Home() {
       </section>
 
       <section>
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="font-display text-lg md:text-xl text-slate-800">按部门筛选</h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedDept('all')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              selectedDept === 'all'
+                ? 'bg-water-500 text-white shadow-md scale-105'
+                : 'bg-white text-slate-600 hover:bg-water-50 border border-slate-100'
+            }`}
+          >
+            全部部门
+          </button>
+          {DEPARTMENTS.map(dept => (
+            <button
+              key={dept.id}
+              onClick={() => setSelectedDept(dept.id)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                selectedDept === dept.id
+                  ? 'bg-water-500 text-white shadow-md scale-105'
+                  : `${dept.bgColor} ${dept.color} hover:opacity-80 border border-slate-100`
+              }`}
+            >
+              <span>{dept.icon}</span>
+              <span>{dept.name}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-yellow-100 flex items-center justify-center">
@@ -129,7 +175,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-water-50 text-water-600 text-xs md:text-sm font-medium">
             <Droplets className="w-3.5 h-3.5" />
-            共 {records.length} 条记录
+            共 {filteredRecords.length} 条记录
           </div>
         </div>
 

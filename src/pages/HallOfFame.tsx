@@ -1,12 +1,19 @@
 import { useMemo } from 'react';
-import { Award, Heart, Droplets, Target, ChevronRight } from 'lucide-react';
+import { Award, Heart, Droplets, Target, ChevronRight, Building2 } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress } from '@/utils';
-import { BADGE_LEVELS } from '@/constants';
+import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats } from '@/utils';
+import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
 import FloatingButton from '@/components/FloatingButton';
 
 export default function HallOfFame() {
   const { employees, records } = useAppStore();
+
+  const departmentStats = useMemo(
+    () => getDepartmentStats(employees, records),
+    [employees, records]
+  );
+
+  const maxDeptRecords = departmentStats[0]?.totalRecords || 1;
 
   const employeesWithStats = useMemo(() => {
     return employees
@@ -53,6 +60,71 @@ export default function HallOfFame() {
           ))}
         </div>
       </div>
+
+      <section className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-cyan-100 flex items-center justify-center">
+            <Building2 className="w-5 h-5 md:w-6 md:h-6 text-cyan-600" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl md:text-2xl text-slate-800">部门换水统计</h2>
+            <p className="text-xs md:text-sm text-slate-400">各部门累计换水量对比</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+          {departmentStats.map((dept, idx) => {
+            const deptConfig = DEPARTMENTS.find(d => d.id === dept.department.id);
+            const progress = (dept.totalRecords / maxDeptRecords) * 100;
+            return (
+              <div
+                key={dept.department.id}
+                className="bg-white rounded-2xl p-5 shadow-card border border-water-50/50 animate-fade-in-up card-hover"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-12 h-12 rounded-xl ${deptConfig?.bgColor || 'bg-slate-100'} flex items-center justify-center text-2xl`}>
+                    {dept.department.icon}
+                  </div>
+                  <div>
+                    <h3 className={`font-display text-lg ${deptConfig?.color || 'text-slate-700'}`}>{dept.department.name}</h3>
+                    <p className="text-xs text-slate-400">{dept.employeeCount} 人</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <Droplets className="w-3.5 h-3.5 text-water-500" />
+                        <span className="text-xs text-slate-500">累计换水</span>
+                      </div>
+                      <span className="font-display text-lg gradient-text">{dept.totalRecords} 次</span>
+                    </div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-water-gradient rounded-full transition-all duration-700"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-water-50/80 rounded-xl p-2.5 text-center">
+                      <div className="font-display text-lg gradient-text">{dept.totalLiters}L</div>
+                      <div className="text-[10px] text-slate-400">累计换水量</div>
+                    </div>
+                    <div className="bg-rose-50/80 rounded-xl p-2.5 text-center">
+                      <div className="font-display text-lg text-rose-500">{dept.totalLikes}</div>
+                      <div className="text-[10px] text-slate-400">累计点赞</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
         <div className="flex items-center justify-between mb-6">
@@ -104,6 +176,17 @@ export default function HallOfFame() {
                       </h3>
                       <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stat.current.bgColor} ${stat.current.color}`}>
                         <span>{stat.current.name}</span>
+                      </div>
+                      <div className="mt-1">
+                        {(() => {
+                          const dept = DEPARTMENTS.find(d => d.id === stat.employee.department);
+                          return dept ? (
+                            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${dept.bgColor} ${dept.color}`}>
+                              <span>{dept.icon}</span>
+                              <span>{dept.name}</span>
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Employee, WaterRecord, BucketType } from '@/types';
+import type { Employee, WaterRecord, BucketType, Department } from '@/types';
 import { INITIAL_EMPLOYEES, STORAGE_KEY } from '@/constants';
 import { generateId, generateMockRecords } from '@/utils';
 
@@ -17,7 +17,7 @@ interface PersistedState {
 
 interface AppState extends PersistedState {
   addRecord: (employeeId: string, bucketType: BucketType) => WaterRecord;
-  addEmployee: (name: string, avatar: string) => Employee;
+  addEmployee: (name: string, avatar: string, department: Department) => Employee;
   likeRecord: (recordId: string) => void;
   isRecordLiked: (recordId: string) => boolean;
 }
@@ -100,12 +100,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     return newRecord;
   },
 
-  addEmployee: (name: string, avatar: string): Employee => {
+  addEmployee: (name: string, avatar: string, department: Department): Employee => {
     const newEmployee: Employee = {
       id: generateId(),
       name: name.trim(),
       avatar,
       totalLikes: 0,
+      department,
     };
 
     set(state => {

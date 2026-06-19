@@ -1,8 +1,19 @@
+export type Department = 'rd' | 'marketing' | 'admin';
+
+export interface DepartmentConfig {
+  id: Department;
+  name: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+}
+
 export interface Employee {
   id: string;
   name: string;
   avatar: string;
   totalLikes: number;
+  department: Department;
 }
 
 export type BucketType = '5G' | '3G' | 'MINI';

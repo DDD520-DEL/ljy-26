@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Trophy, Heart, Users, ChevronDown, BarChart3 } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, getAvailableMonths, formatMonthLabel } from '@/utils';
+import type { Department } from '@/types';
+import { DEPARTMENTS } from '@/constants';
 import Top3Hero from '@/components/Top3Hero';
 import FloatingButton from '@/components/FloatingButton';
 
@@ -11,16 +13,28 @@ export default function Ranking() {
 
   const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
+
+  const filteredEmployees = useMemo(() => {
+    if (selectedDept === 'all') return employees;
+    return employees.filter(e => e.department === selectedDept);
+  }, [employees, selectedDept]);
+
+  const filteredRecords = useMemo(() => {
+    if (selectedDept === 'all') return records;
+    const deptIds = new Set(filteredEmployees.map(e => e.id));
+    return records.filter(r => deptIds.has(r.employeeId));
+  }, [records, filteredEmployees, selectedDept]);
 
   const ranking = useMemo(
-    () => getMonthlyRanking(records, employees, selectedMonth.year, selectedMonth.month),
-    [records, employees, selectedMonth]
+    () => getMonthlyRanking(filteredRecords, filteredEmployees, selectedMonth.year, selectedMonth.month),
+    [filteredRecords, filteredEmployees, selectedMonth]
   );
 
   const maxRecords = ranking[0]?.records || 1;
 
   const monthStats = useMemo(() => {
-    const monthRecords = records.filter(r => {
+    const monthRecords = filteredRecords.filter(r => {
       const d = new Date(r.timestamp);
       return d.getFullYear() === selectedMonth.year && d.getMonth() === selectedMonth.month;
     });
@@ -30,7 +44,7 @@ export default function Ranking() {
       likes: totalLikes,
       people: ranking.length,
     };
-  }, [records, ranking, selectedMonth]);
+  }, [filteredRecords, ranking, selectedMonth]);
 
   const rankBadges = ['🥇', '🥈', '🥉'];
 
@@ -77,6 +91,33 @@ export default function Ranking() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => setSelectedDept('all')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              selectedDept === 'all'
+                ? 'bg-water-500 text-white shadow-md scale-105'
+                : 'bg-white text-slate-600 hover:bg-water-50 border border-slate-100'
+            }`}
+          >
+            全部部门
+          </button>
+          {DEPARTMENTS.map(dept => (
+            <button
+              key={dept.id}
+              onClick={() => setSelectedDept(dept.id)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                selectedDept === dept.id
+                  ? 'bg-water-500 text-white shadow-md scale-105'
+                  : `${dept.bgColor} ${dept.color} hover:opacity-80 border border-slate-100`
+              }`}
+            >
+              <span>{dept.icon}</span>
+              <span>{dept.name}</span>
+            </button>
+          ))}
         </div>
 
         <div className="grid grid-cols-3 gap-3 md:gap-4">
