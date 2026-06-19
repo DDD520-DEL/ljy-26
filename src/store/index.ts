@@ -3,26 +3,48 @@ import type { Employee, WaterRecord, BucketType } from '@/types';
 import { INITIAL_EMPLOYEES, STORAGE_KEY } from '@/constants';
 import { generateId, generateMockRecords } from '@/utils';
 
+interface PersistedStateRaw {
+  employees: Employee[];
+  records: WaterRecord[];
+  likedRecordIds: string[];
+}
+
 interface PersistedState {
   employees: Employee[];
   records: WaterRecord[];
+  likedRecords: Set<string>;
 }
 
 interface AppState extends PersistedState {
-  likedRecords: Set<string>;
   addRecord: (employeeId: string, bucketType: BucketType) => WaterRecord;
   addEmployee: (name: string, avatar: string) => Employee;
   likeRecord: (recordId: string) => void;
   isRecordLiked: (recordId: string) => boolean;
 }
 
+function serializeState(state: PersistedState): PersistedStateRaw {
+  return {
+    employees: state.employees,
+    records: state.records,
+    likedRecordIds: Array.from(state.likedRecords),
+  };
+}
+
+function deserializeState(raw: PersistedStateRaw): PersistedState {
+  return {
+    employees: raw.employees,
+    records: raw.records,
+    likedRecords: new Set(raw.likedRecordIds || []),
+  };
+}
+
 function loadFromStorage(): PersistedState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as PersistedState;
+      const parsed = JSON.parse(raw) as PersistedStateRaw;
       if (parsed.employees && parsed.records) {
-        return parsed;
+        return deserializeState(parsed);
       }
     }
   } catch {
@@ -33,7 +55,7 @@ function loadFromStorage(): PersistedState | null {
 
 function saveToStorage(state: PersistedState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState(state)));
   } catch {
     // ignore
   }
@@ -45,7 +67,11 @@ function getInitialState(): PersistedState {
 
   const employees = [...INITIAL_EMPLOYEES];
   const records = generateMockRecords(employees);
-  const initial: PersistedState = { employees, records };
+  const initial: PersistedState = {
+    employees,
+    records,
+    likedRecords: new Set<string>(),
+  };
   saveToStorage(initial);
   return initial;
 }
@@ -54,7 +80,6 @@ const initialPersisted = getInitialState();
 
 export const useAppStore = create<AppState>((set, get) => ({
   ...initialPersisted,
-  likedRecords: new Set<string>(),
 
   addRecord: (employeeId: string, bucketType: BucketType): WaterRecord => {
     const newRecord: WaterRecord = {
@@ -67,7 +92,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set(state => {
       const records = [newRecord, ...state.records];
-      saveToStorage({ employees: state.employees, records });
+      const newState = { ...state, records };
+      saveToStorage(newState);
       return { records };
     });
 
@@ -84,7 +110,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set(state => {
       const employees = [...state.employees, newEmployee];
-      saveToStorage({ employees, records: state.records });
+      const newState = { ...state, employees };
+      saveToStorage(newState);
       return { employees };
     });
 
@@ -111,8 +138,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     const likedRecords = new Set(state.likedRecords);
     likedRecords.add(recordId);
 
-    saveToStorage({ employees, records });
-    set({ employees, records, likedRecords });
+    const newState = { employees, records, likedRecords };
+    saveToStorage(newState);
+    set(newState);
   },
 
   isRecordLiked: (recordId: string): boolean => {

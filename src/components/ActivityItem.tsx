@@ -12,9 +12,10 @@ interface ActivityItemProps {
 }
 
 export default function ActivityItem({ record, employee, index }: ActivityItemProps) {
-  const { likeRecord, isRecordLiked } = useAppStore();
+  const { likeRecord } = useAppStore();
+  const likedRecords = useAppStore(state => state.likedRecords);
   const [isAnimating, setIsAnimating] = useState(false);
-  const liked = isRecordLiked(record.id);
+  const liked = likedRecords.has(record.id);
   const bucket = BUCKET_TYPES.find(b => b.type === record.bucketType);
 
   const handleLike = () => {
