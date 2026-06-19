@@ -8,6 +8,7 @@ interface PersistedStateRaw {
   records: WaterRecord[];
   likedRecordIds: string[];
   comments: Comment[];
+  currentCommenterId: string | null;
 }
 
 interface PersistedState {
@@ -15,6 +16,7 @@ interface PersistedState {
   records: WaterRecord[];
   likedRecords: Set<string>;
   comments: Comment[];
+  currentCommenterId: string | null;
 }
 
 interface AppState extends PersistedState {
@@ -24,6 +26,7 @@ interface AppState extends PersistedState {
   isRecordLiked: (recordId: string) => boolean;
   addComment: (recordId: string, employeeId: string, content: string) => Comment;
   getCommentsByRecord: (recordId: string) => Comment[];
+  setCurrentCommenter: (employeeId: string) => void;
 }
 
 function serializeState(state: PersistedState): PersistedStateRaw {
@@ -32,6 +35,7 @@ function serializeState(state: PersistedState): PersistedStateRaw {
     records: state.records,
     likedRecordIds: Array.from(state.likedRecords),
     comments: state.comments,
+    currentCommenterId: state.currentCommenterId,
   };
 }
 
@@ -41,6 +45,7 @@ function deserializeState(raw: PersistedStateRaw): PersistedState {
     records: raw.records,
     likedRecords: new Set(raw.likedRecordIds || []),
     comments: raw.comments || [],
+    currentCommenterId: raw.currentCommenterId || null,
   };
 }
 
@@ -79,6 +84,7 @@ function getInitialState(): PersistedState {
     records,
     likedRecords: new Set<string>(),
     comments,
+    currentCommenterId: employees[0]?.id || null,
   };
   saveToStorage(initial);
   return initial;
@@ -102,7 +108,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const records = [newRecord, ...state.records];
       const newState = { ...state, records };
       saveToStorage(newState);
-      return { records };
+      return newState;
     });
 
     return newRecord;
@@ -121,7 +127,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const employees = [...state.employees, newEmployee];
       const newState = { ...state, employees };
       saveToStorage(newState);
-      return { employees };
+      return newState;
     });
 
     return newEmployee;
@@ -147,13 +153,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     const likedRecords = new Set(state.likedRecords);
     likedRecords.add(recordId);
 
-    const newState = { employees, records, likedRecords, comments: state.comments };
+    const newState = { employees, records, likedRecords, comments: state.comments, currentCommenterId: state.currentCommenterId };
     saveToStorage(newState);
     set(newState);
   },
 
   isRecordLiked: (recordId: string): boolean => {
     return get().likedRecords.has(recordId);
+  },
+
+  setCurrentCommenter: (employeeId: string): void => {
+    const state = get();
+    const newState = { ...state, currentCommenterId: employeeId };
+    saveToStorage(newState);
+    set({ currentCommenterId: employeeId });
   },
 
   addComment: (recordId: string, employeeId: string, content: string): Comment => {
@@ -169,7 +182,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const comments = [...state.comments, newComment];
       const newState = { ...state, comments };
       saveToStorage(newState);
-      return { comments };
+      return newState;
     });
 
     return newComment;

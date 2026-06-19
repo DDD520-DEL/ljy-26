@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Heart, MessageCircle, Send } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Heart, MessageCircle, Send, ChevronDown, User } from 'lucide-react';
 import type { WaterRecord, Employee, Comment } from '@/types';
 import { BUCKET_TYPES, INITIAL_EMPLOYEES } from '@/constants';
 import { useAppStore } from '@/store';
@@ -12,19 +12,40 @@ interface ActivityItemProps {
 }
 
 export default function ActivityItem({ record, employee, index }: ActivityItemProps) {
-  const { likeRecord, addComment, comments, employees } = useAppStore();
+  const { likeRecord, addComment, comments, employees, currentCommenterId, setCurrentCommenter } = useAppStore();
   const likedRecords = useAppStore(state => state.likedRecords);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [showCommenterPicker, setShowCommenterPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const liked = likedRecords.has(record.id);
   const bucket = BUCKET_TYPES.find(b => b.type === record.bucketType);
+
+  const currentCommenter = useMemo(() => {
+    return employees.find(e => e.id === currentCommenterId)
+      || INITIAL_EMPLOYEES.find(e => e.id === currentCommenterId)
+      || employees[0]
+      || INITIAL_EMPLOYEES[0];
+  }, [employees, currentCommenterId]);
 
   const recordComments = useMemo(() => {
     return comments
       .filter(c => c.recordId === record.id)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [comments, record.id]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowCommenterPicker(false);
+      }
+    };
+    if (showCommenterPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCommenterPicker]);
 
   const handleLike = () => {
     if (liked) return;
@@ -36,8 +57,8 @@ export default function ActivityItem({ record, employee, index }: ActivityItemPr
   const handleAddComment = () => {
     const trimmed = commentText.trim();
     if (!trimmed) return;
-    const randomEmployee = employees[Math.floor(Math.random() * employees.length)] || INITIAL_EMPLOYEES[0];
-    addComment(record.id, randomEmployee.id, trimmed);
+    if (!currentCommenter) return;
+    addComment(record.id, currentCommenter.id, trimmed);
     setCommentText('');
     setShowComments(true);
   };
@@ -168,31 +189,81 @@ export default function ActivityItem({ record, employee, index }: ActivityItemPr
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-water-50 flex items-center justify-center text-base md:text-lg shrink-0">
-                  💬
-                </div>
-                <div className="flex-1 flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-water-300 transition-all">
-                  <input
-                    type="text"
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="为换水英雄加油打气..."
-                    className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none min-w-0"
-                    maxLength={100}
-                  />
+              <div className="flex items-start gap-2">
+                <div className="relative" ref={pickerRef}>
                   <button
-                    onClick={handleAddComment}
-                    disabled={!commentText.trim()}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      commentText.trim()
-                        ? 'bg-water-500 text-white hover:bg-water-600 active:scale-95'
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
+                    onClick={() => setShowCommenterPicker(!showCommenterPicker)}
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-water-100 to-cyan-50 flex items-center justify-center text-xl md:text-2xl shrink-0 border-2 border-water-200 hover:border-water-400 transition-all active:scale-95 relative group"
+                    title="切换评论身份"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    {currentCommenter?.avatar || '💬'}
+                    <ChevronDown className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-water-500 text-white rounded-full p-0.5" />
                   </button>
+
+                  {showCommenterPicker && (
+                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-30 animate-bounce-in">
+                      <div className="px-3 py-2 bg-water-50/80 border-b border-water-100">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-water-700">
+                          <User className="w-3 h-3" />
+                          <span>选择你的身份</span>
+                        </div>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto p-1.5">
+                        {employees.map(emp => (
+                          <button
+                            key={emp.id}
+                            onClick={() => {
+                              setCurrentCommenter(emp.id);
+                              setShowCommenterPicker(false);
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all ${
+                              currentCommenterId === emp.id
+                                ? 'bg-water-50 text-water-700'
+                                : 'text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-xl shrink-0">
+                              {emp.avatar}
+                            </div>
+                            <span className="text-sm font-medium truncate">{emp.name}</span>
+                            {currentCommenterId === emp.id && (
+                              <div className="ml-auto w-2 h-2 rounded-full bg-water-500" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <div className="text-[11px] text-slate-400 flex items-center gap-1.5 px-0.5">
+                    <span>以</span>
+                    <span className="font-semibold text-slate-600">{currentCommenter?.name}</span>
+                    <span>的身份发表</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-water-300 transition-all">
+                    <input
+                      type="text"
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="为换水英雄加油打气..."
+                      className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none min-w-0"
+                      maxLength={100}
+                    />
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!commentText.trim()}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        commentText.trim()
+                          ? 'bg-water-500 text-white hover:bg-water-600 active:scale-95'
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
