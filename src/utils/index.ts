@@ -302,7 +302,7 @@ export function getLastWeekChampions(
   if (maxRecords === 0) return null;
 
   const championIds = Array.from(empMap.entries())
-    .filter(([_, d]) => d.records === maxRecords)
+    .filter(([, d]) => d.records === maxRecords)
     .map(([id]) => id);
 
   const champions: WeeklyChampion[] = championIds.map(id => {
@@ -373,6 +373,59 @@ export function formatDateForFilename(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}${month}${day}`;
+}
+
+export function generatePersonalComment(
+  employeeName: string,
+  totalRecords: number,
+  totalLikes: number,
+  badgeName: string,
+  departmentName: string
+): string {
+  if (totalRecords === 0) {
+    return `${employeeName}同学，你已经是${departmentName}的一员啦！虽然还没有换水记录，但每一滴奉献都值得被记住～期待你的第一次换水，成为真正的换水英雄！💪`;
+  }
+
+  const templates = [
+    `${employeeName}是${departmentName}的"${badgeName}"，累计换水${totalRecords}次，收获了${totalLikes}个赞！${
+      totalLikes / Math.max(totalRecords, 1) >= 3
+        ? '超高的人气说明你不仅换水勤快，更是大家心中的人气王！🌟'
+        : '默默付出的身影，大家都看在眼里记在心里～'
+    }`,
+    `认识一下这位${departmentName}的供水英雄——${employeeName}！${badgeName}的称号实至名归。${totalRecords}次换水、${totalLikes}次点赞，每一个数字背后都是对同事们满满的关爱。❤️`,
+    `${employeeName}同学，你就是${departmentName}的清泉！作为"${badgeName}"，你用${totalRecords}次换水为大家的饮水健康保驾护航。${totalLikes}个赞是大家对你最好的认可！👍`,
+  ];
+
+  if (totalRecords >= 30) {
+    templates.push(
+      `哇！${employeeName}已经是传说级的"${badgeName}"了！${totalRecords}次的换水记录，${totalLikes}个点赞，你就是${departmentName}的供水传奇。请收下我们的膝盖！🙇‍♂️🙇‍♀️`
+    );
+  }
+
+  if (totalRecords >= 5 && totalRecords < 15) {
+    templates.push(
+      `${employeeName}同学正在稳步成长为${departmentName}的换水达人！作为"${badgeName}"，你已经完成了${totalRecords}次换水，获得了${totalLikes}个赞。继续加油，更高的称号在等着你！🚀`
+    );
+  }
+
+  const seed = totalRecords + totalLikes + employeeName.length;
+  const index = seed % templates.length;
+  return templates[index];
+}
+
+export function getEmployeeRecords(employeeId: string, records: WaterRecord[]): WaterRecord[] {
+  return records
+    .filter(r => r.employeeId === employeeId)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+export function getEmployeeTotalLiters(employeeId: string, records: WaterRecord[]): number {
+  const employeeRecords = records.filter(r => r.employeeId === employeeId);
+  const totalLiters = employeeRecords.reduce((sum, r) => {
+    const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+    return sum + liters;
+  }, 0);
+  return Math.round(totalLiters * 10) / 10;
 }
 
 export function exportToExcel(data: ExportDataItem[], sheetName: string, filename: string): void {

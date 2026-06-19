@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { RankingEntry } from '@/types';
 import { Heart } from 'lucide-react';
 
@@ -68,10 +69,11 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
             style={{ animationDelay: `${idx * 0.15}s` }}
           >
             {entry ? (
-              <div
-                className={`relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px]`}
+              <Link
+                to={`/hero/${entry.employee.id}`}
+                className={`relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px] block`}
               >
-                <div className="bg-white rounded-[22px] p-4 md:p-6 relative">
+                <div className="bg-white rounded-[22px] p-4 md:p-6 relative group">
                   {config.crown && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-3xl md:text-4xl animate-float z-10">
                       👑
@@ -87,7 +89,7 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
 
                   <div className={`relative mx-auto ${
                     config.rank === 1 ? 'w-20 h-20 md:w-24 md:h-24' : 'w-16 h-16 md:w-20 md:h-20'
-                  } rounded-full overflow-hidden mb-3 bg-water-50 flex items-center justify-center border-4 border-white shadow-lg`}>
+                  } rounded-full overflow-hidden mb-3 bg-water-50 flex items-center justify-center border-4 border-white shadow-lg group-hover:scale-105 transition-transform`}>
                     <div className={`${
                       config.rank === 1 ? 'text-5xl md:text-6xl' : 'text-4xl md:text-5xl'
                     }`}>
@@ -100,7 +102,7 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
 
                   <h3 className={`font-display text-center ${
                     config.rank === 1 ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'
-                  } text-slate-800 mb-1 truncate`}>
+                  } text-slate-800 mb-1 truncate group-hover:text-water-600 transition-colors`}>
                     {entry.employee.name}
                   </h3>
 
@@ -136,7 +138,7 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ) : (
               <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-dashed border-slate-200 min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center">
                 <div className="text-4xl mb-2 opacity-30">{config.medal}</div>

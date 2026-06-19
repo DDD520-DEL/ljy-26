@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Award, Heart, Droplets, Target, ChevronRight, Building2, MessageCircle, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Award, Heart, Droplets, Target, ChevronRight, Building2, MessageCircle, Download, User } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getEmployeeTotalRecords, getEmployeeTotalLikes, getNextBadgeProgress, getDepartmentStats, getEmployeeTotalComments, exportToExcel, formatDateForFilename, type ExportDataItem } from '@/utils';
 import { BADGE_LEVELS, DEPARTMENTS } from '@/constants';
@@ -174,13 +175,14 @@ export default function HallOfFame() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
             {employeesWithStats.map((stat, idx) => (
-              <div
+              <Link
                 key={stat.employee.id}
-                className="relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border border-water-50/50 animate-fade-in-up group"
+                to={`/hero/${stat.employee.id}`}
+                className="relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border border-water-50/50 animate-fade-in-up group block"
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
                 {idx === 0 && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white text-xs font-bold shadow-md flex items-center gap-1">
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white text-xs font-bold shadow-md flex items-center gap-1 z-10">
                     <span>👑</span>
                     <span>No.1</span>
                   </div>
@@ -191,7 +193,7 @@ export default function HallOfFame() {
                 <div className="p-5">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="relative">
-                      <div className="w-16 h-16 md:w-18 md:h-18 rounded-2xl bg-gradient-to-br from-water-50 to-cyan-50 flex items-center justify-center text-4xl md:text-5xl border-4 border-white shadow-md">
+                      <div className="w-16 h-16 md:w-18 md:h-18 rounded-2xl bg-gradient-to-br from-water-50 to-cyan-50 flex items-center justify-center text-4xl md:text-5xl border-4 border-white shadow-md group-hover:scale-105 transition-transform">
                         {stat.employee.avatar}
                       </div>
                       <div className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full ${stat.current.bgColor} flex items-center justify-center text-lg border-2 border-white shadow-sm`}>
@@ -199,7 +201,7 @@ export default function HallOfFame() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-display text-xl text-slate-800 truncate mb-1">
+                      <h3 className="font-display text-xl text-slate-800 truncate mb-1 group-hover:text-water-600 transition-colors">
                         {stat.employee.name}
                       </h3>
                       <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stat.current.bgColor} ${stat.current.color}`}>
@@ -277,8 +279,13 @@ export default function HallOfFame() {
                       <div className="text-[11px] text-purple-400">传说级换水英雄</div>
                     </div>
                   )}
+
+                  <div className="mt-4 flex items-center justify-center gap-1 text-xs text-water-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="font-medium">查看详情</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Send, ChevronDown, User } from 'lucide-react';
 import type { WaterRecord, Employee, Comment } from '@/types';
 import { BUCKET_TYPES, INITIAL_EMPLOYEES } from '@/constants';
@@ -97,12 +98,15 @@ export default function ActivityItem({ record, employee, index }: ActivityItemPr
           )}
 
           <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-water-50 flex items-center justify-center text-2xl md:text-3xl shrink-0">
+            <Link
+              to={employee ? `/hero/${employee.id}` : '#'}
+              className="flex items-center gap-3 min-w-0 group"
+            >
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-water-50 flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                 {employee?.avatar || '👤'}
               </div>
               <div className="min-w-0">
-                <div className="font-semibold text-slate-800 truncate">
+                <div className="font-semibold text-slate-800 truncate group-hover:text-water-600 transition-colors">
                   {employee?.name || '未知用户'}
                 </div>
                 <div className="text-xs text-slate-400 flex items-center gap-1">
@@ -110,7 +114,7 @@ export default function ActivityItem({ record, employee, index }: ActivityItemPr
                   <span>{formatTimeAgo(record.timestamp)}</span>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className="flex items-center justify-between mb-3">

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Trophy, Droplets, Heart, Crown } from 'lucide-react';
 import type { WeeklyChampion } from '@/utils';
 import { DEPARTMENTS } from '@/constants';
@@ -94,14 +95,15 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
           </div>
 
           <div className={`${isTie ? 'flex flex-wrap gap-3' : ''} mb-5`}>
-            {champions.map((champion, idx) => (
-              <div
+            {champions.map((champion) => (
+              <Link
                 key={champion.employee.id}
-                className={`${isTie ? 'flex-1 min-w-[140px]' : ''} bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-amber-100/80 shadow-sm`}
+                to={`/hero/${champion.employee.id}`}
+                className={`${isTie ? 'flex-1 min-w-[140px]' : ''} bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-amber-100/80 shadow-sm hover:shadow-md transition-all group block`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="relative">
-                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center text-3xl md:text-4xl border-2 border-amber-200/60 shadow-inner">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center text-3xl md:text-4xl border-2 border-amber-200/60 shadow-inner group-hover:scale-105 transition-transform">
                       {champion.employee.avatar}
                     </div>
                     <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-md">
@@ -109,7 +111,7 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="font-display text-lg md:text-xl text-amber-900 truncate">
+                    <div className="font-display text-lg md:text-xl text-amber-900 truncate group-hover:text-amber-700 transition-colors">
                       {champion.employee.name}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-amber-600/70">
@@ -142,7 +144,7 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
                     <div className="text-[10px] text-slate-400">点赞数</div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

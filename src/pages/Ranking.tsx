@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Trophy, Heart, Users, ChevronDown, BarChart3, Download } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem } from '@/utils';
@@ -208,8 +209,9 @@ export default function Ranking() {
               {ranking.map((entry, idx) => {
                 const progress = (entry.records / maxRecords) * 100;
                 return (
-                  <div
+                  <Link
                     key={entry.employee.id}
+                    to={`/hero/${entry.employee.id}`}
                     className="group grid grid-cols-12 gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 hover:bg-water-50/30 transition-colors items-center"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
@@ -224,11 +226,11 @@ export default function Ranking() {
                     </div>
 
                     <div className="col-span-10 md:col-span-4 flex items-center gap-3">
-                      <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-water-50 flex items-center justify-center text-2xl md:text-3xl shrink-0">
+                      <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-water-50 flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                         {entry.employee.avatar}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-semibold text-slate-800 truncate">{entry.employee.name}</div>
+                        <div className="font-semibold text-slate-800 truncate group-hover:text-water-600 transition-colors">{entry.employee.name}</div>
                         <div className="hidden md:flex items-center gap-1.5 mt-0.5">
                           <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${entry.badge.bgColor} ${entry.badge.color}`}>
                             <span>{entry.badge.icon}</span>
@@ -266,7 +268,7 @@ export default function Ranking() {
                         {entry.likes}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
