@@ -62,10 +62,10 @@ export default function HeroProfile() {
   }, [employee, totalRecords, totalLikes, badgeProgress, department]);
 
   const stats = [
-    { label: '总换水次数', value: totalRecords, icon: Droplets, color: 'from-blue-400 to-water-600', bgColor: 'bg-water-50' },
-    { label: '总获赞数', value: totalLikes, icon: Heart, color: 'from-rose-400 to-pink-500', bgColor: 'bg-rose-50' },
-    { label: '总换水量', value: `${totalLiters}L`, icon: Droplet, color: 'from-cyan-400 to-teal-500', bgColor: 'bg-cyan-50' },
-    { label: '总评论数', value: totalComments, icon: MessageCircle, color: 'from-amber-400 to-orange-500', bgColor: 'bg-amber-50' },
+    { label: '总换水次数', value: totalRecords, icon: Droplets, gradId: 'grad-blue', bgColor: 'bg-water-50' },
+    { label: '总获赞数', value: totalLikes, icon: Heart, gradId: 'grad-rose', bgColor: 'bg-rose-50' },
+    { label: '总换水量', value: `${totalLiters}L`, icon: Droplet, gradId: 'grad-cyan', bgColor: 'bg-cyan-50' },
+    { label: '总评论数', value: totalComments, icon: MessageCircle, gradId: 'grad-amber', bgColor: 'bg-amber-50' },
   ];
 
   if (!employee) {
@@ -89,6 +89,26 @@ export default function HeroProfile() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in-up">
+      <svg width="0" height="0" className="absolute">
+        <defs>
+          <linearGradient id="grad-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </linearGradient>
+          <linearGradient id="grad-rose" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fb7185" />
+            <stop offset="100%" stopColor="#ec4899" />
+          </linearGradient>
+          <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#14b8a6" />
+          </linearGradient>
+          <linearGradient id="grad-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f97316" />
+          </linearGradient>
+        </defs>
+      </svg>
       <button
         onClick={() => navigate(-1)}
         className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-water-600 bg-white/70 backdrop-blur-sm rounded-xl hover:bg-white transition-all shadow-sm"
@@ -135,19 +155,27 @@ export default function HeroProfile() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {stats.map((stat, idx) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up card-hover"
-            style={{ animationDelay: `${idx * 0.1}s` }}
-          >
-            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${stat.bgColor} flex items-center justify-center mb-3`}>
-              <stat.icon className={`w-5 h-5 md:w-6 md:h-6 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`} style={{ color: 'currentColor' }} />
+        {stats.map((stat, idx) => {
+          const IconComponent = stat.icon;
+          const isHeart = stat.icon === Heart;
+          return (
+            <div
+              key={stat.label}
+              className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up card-hover"
+              style={{ animationDelay: `${idx * 0.1}s` }}
+            >
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${stat.bgColor} flex items-center justify-center mb-3`}>
+                <IconComponent
+                  className="w-5 h-5 md:w-6 md:h-6"
+                  stroke={`url(#${stat.gradId})`}
+                  fill={isHeart ? `url(#${stat.gradId})` : 'none'}
+                />
+              </div>
+              <div className="font-display text-2xl md:text-3xl gradient-text mb-1">{stat.value}</div>
+              <div className="text-xs md:text-sm text-slate-500">{stat.label}</div>
             </div>
-            <div className="font-display text-2xl md:text-3xl gradient-text mb-1">{stat.value}</div>
-            <div className="text-xs md:text-sm text-slate-500">{stat.label}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="bg-white rounded-3xl p-5 md:p-7 shadow-card border border-water-50/50">
