@@ -59,15 +59,22 @@
   ],
   "records": [
     {
-      "id": "mqls18fic06ip1njt",
+      "id": "test-rec-2",
       "employeeId": "2",
-      "bucketType": "3G",
-      "timestamp": "2026-06-20T03:07:06.492Z",
+      "bucketType": "small",
+      "timestamp": "2025-07-08T13:00:00.000Z",
+      "likes": 0
+    },
+    {
+      "id": "test-rec-1",
+      "employeeId": "1",
+      "bucketType": "big",
+      "timestamp": "2025-07-08T12:00:00.000Z",
       "likes": 0
     }
   ],
   "likedRecordIds": [],
   "comments": [],
   "currentCommenterId": "1",
-  "_lastModified": 1781924827374
+  "_lastModified": 1781927012407
 }

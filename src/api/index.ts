@@ -99,7 +99,7 @@ export const api = {
     return request<Employee[]>('/api/employees');
   },
 
-  async addEmployee(data: { name: string; avatar: string; department: Department }): Promise<Employee> {
+  async addEmployee(data: { id?: string; name: string; avatar: string; department: Department }): Promise<Employee> {
     return request<Employee>('/api/employees', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -117,7 +117,7 @@ export const api = {
     return request<WaterRecord[]>('/api/records');
   },
 
-  async addRecord(data: { employeeId: string; bucketType: BucketType; timestamp?: string }): Promise<WaterRecord> {
+  async addRecord(data: { id?: string; employeeId: string; bucketType: BucketType; timestamp?: string; likes?: number }): Promise<WaterRecord> {
     return request<WaterRecord>('/api/records', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -141,7 +141,7 @@ export const api = {
     return request<Comment[]>('/api/comments');
   },
 
-  async addComment(data: { recordId: string; employeeId: string; content: string }): Promise<Comment> {
+  async addComment(data: { id?: string; recordId: string; employeeId: string; content: string; timestamp?: string }): Promise<Comment> {
     return request<Comment>('/api/comments', {
       method: 'POST',
       body: JSON.stringify(data),

@@ -187,12 +187,12 @@ class SyncManager {
     try {
       switch (action.type) {
         case 'addRecord': {
-          const payload = action.payload as { employeeId: string; bucketType: BucketType; timestamp: string };
+          const payload = action.payload as { id?: string; employeeId: string; bucketType: BucketType; timestamp: string; likes?: number };
           await api.addRecord(payload);
           return true;
         }
         case 'addEmployee': {
-          const payload = action.payload as { name: string; avatar: string; department: Department };
+          const payload = action.payload as { id?: string; name: string; avatar: string; department: Department };
           await api.addEmployee(payload);
           return true;
         }
@@ -207,7 +207,7 @@ class SyncManager {
           return true;
         }
         case 'addComment': {
-          const payload = action.payload as { recordId: string; employeeId: string; content: string };
+          const payload = action.payload as { id?: string; recordId: string; employeeId: string; content: string; timestamp?: string };
           await api.addComment(payload);
           return true;
         }

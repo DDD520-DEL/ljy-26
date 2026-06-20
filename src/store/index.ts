@@ -82,9 +82,54 @@ function saveToStorage(state: PersistedState): void {
   }
 }
 
+function deduplicateLocalState(state: PersistedState): PersistedState {
+  const uniqueEmployees = Array.from(
+    new Map(state.employees.map(e => [e.id, e])).values()
+  );
+
+  const seenRecordIds = new Set<string>();
+  const seenRecordFps = new Set<string>();
+  const uniqueRecords: WaterRecord[] = [];
+  for (const r of state.records) {
+    if (seenRecordIds.has(r.id)) continue;
+    const fp = `${r.employeeId}-${r.bucketType}-${r.timestamp}`;
+    if (seenRecordFps.has(fp)) continue;
+    seenRecordIds.add(r.id);
+    seenRecordFps.add(fp);
+    uniqueRecords.push(r);
+  }
+
+  const seenCommentIds = new Set<string>();
+  const seenCommentFps = new Set<string>();
+  const uniqueComments: Comment[] = [];
+  for (const c of state.comments) {
+    if (seenCommentIds.has(c.id)) continue;
+    const fp = `${c.recordId}-${c.employeeId}-${c.timestamp}-${c.content}`;
+    if (seenCommentFps.has(fp)) continue;
+    seenCommentIds.add(c.id);
+    seenCommentFps.add(fp);
+    uniqueComments.push(c);
+  }
+
+  return {
+    ...state,
+    employees: uniqueEmployees,
+    records: uniqueRecords,
+    comments: uniqueComments,
+  };
+}
+
 function getInitialLocalState(): PersistedState {
   const saved = loadFromStorage();
-  if (saved) return saved;
+  if (saved) {
+    const deduped = deduplicateLocalState(saved);
+    const changed =
+      deduped.records.length !== saved.records.length ||
+      deduped.comments.length !== saved.comments.length ||
+      deduped.employees.length !== saved.employees.length;
+    if (changed) saveToStorage(deduped);
+    return deduped;
+  }
 
   const employees = [...INITIAL_EMPLOYEES];
   const records = generateMockRecords(employees);
@@ -107,38 +152,77 @@ function mergeServerIntoLocal(
   serverLikedIds: string[],
   serverComments: Comment[]
 ): PersistedState {
-  const localEmpIds = new Set(local.employees.map(e => e.id));
-  const mergedEmployees = [...local.employees];
+  const localEmpMap = new Map(local.employees.map(e => [e.id, { ...e }]));
   serverEmployees.forEach(emp => {
-    if (!localEmpIds.has(emp.id)) {
-      mergedEmployees.push(emp);
+    const existing = localEmpMap.get(emp.id);
+    if (existing) {
+      localEmpMap.set(emp.id, {
+        ...existing,
+        ...emp,
+        totalLikes: Math.max(existing.totalLikes || 0, emp.totalLikes || 0),
+      });
     } else {
-      const idx = mergedEmployees.findIndex(e => e.id === emp.id);
-      if (idx !== -1) {
-        mergedEmployees[idx] = { ...mergedEmployees[idx], ...emp, totalLikes: Math.max(mergedEmployees[idx].totalLikes || 0, emp.totalLikes || 0) };
+      localEmpMap.set(emp.id, { ...emp });
+    }
+  });
+  const mergedEmployees = Array.from(localEmpMap.values());
+
+  function getRecordFingerprint(r: WaterRecord): string {
+    return `${r.employeeId}-${r.bucketType}-${r.timestamp}`;
+  }
+
+  const localRecordsById = new Map(local.records.map(r => [r.id, { ...r }]));
+  const localRecordsByFp = new Map<string, string>();
+  local.records.forEach(r => {
+    localRecordsByFp.set(getRecordFingerprint(r), r.id);
+  });
+
+  serverRecords.forEach(rec => {
+    if (localRecordsById.has(rec.id)) {
+      const existing = localRecordsById.get(rec.id)!;
+      localRecordsById.set(rec.id, {
+        ...existing,
+        likes: Math.max(existing.likes || 0, rec.likes || 0),
+      });
+    } else {
+      const fp = getRecordFingerprint(rec);
+      const duplicateLocalId = localRecordsByFp.get(fp);
+      if (duplicateLocalId) {
+        const existing = localRecordsById.get(duplicateLocalId)!;
+        localRecordsById.set(duplicateLocalId, {
+          ...existing,
+          likes: Math.max(existing.likes || 0, rec.likes || 0),
+        });
+      } else {
+        localRecordsById.set(rec.id, { ...rec });
       }
     }
   });
 
-  const localRecIds = new Set(local.records.map(r => r.id));
-  const mergedRecords = [...local.records];
-  serverRecords.forEach(rec => {
-    if (!localRecIds.has(rec.id)) {
-      mergedRecords.push(rec);
-    }
-  });
-  mergedRecords.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const mergedRecords = Array.from(localRecordsById.values())
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  const mergedLiked = new Set(local.likedRecords);
+  const mergedLiked = new Set<string>();
+  local.likedRecords.forEach(id => mergedLiked.add(id));
   serverLikedIds.forEach(id => mergedLiked.add(id));
 
-  const localCommentIds = new Set(local.comments.map(c => c.id));
-  const mergedComments = [...local.comments];
-  serverComments.forEach(c => {
-    if (!localCommentIds.has(c.id)) {
-      mergedComments.push(c);
-    }
+  function getCommentFingerprint(c: Comment): string {
+    return `${c.recordId}-${c.employeeId}-${c.timestamp}-${c.content}`;
+  }
+
+  const localCommentsById = new Map(local.comments.map(c => [c.id, { ...c }]));
+  const localCommentsByFp = new Map<string, string>();
+  local.comments.forEach(c => {
+    localCommentsByFp.set(getCommentFingerprint(c), c.id);
   });
+
+  serverComments.forEach(c => {
+    if (localCommentsById.has(c.id)) return;
+    const fp = getCommentFingerprint(c);
+    if (localCommentsByFp.has(fp)) return;
+    localCommentsById.set(c.id, { ...c });
+  });
+  const mergedComments = Array.from(localCommentsById.values());
 
   return {
     employees: mergedEmployees,
@@ -200,7 +284,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       return newState;
     });
 
-    syncManager.enqueue('addEmployee', { name, avatar, department });
+    syncManager.enqueue('addEmployee', { id: newEmployee.id, name, avatar, department });
 
     return newEmployee;
   },
@@ -266,9 +350,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     syncManager.enqueue('addComment', {
+      id: newComment.id,
       recordId,
       employeeId,
       content: content.trim(),
+      timestamp: newComment.timestamp,
     });
 
     return newComment;

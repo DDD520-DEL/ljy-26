@@ -83,15 +83,23 @@ app.get('/api/employees', (req, res) => {
 });
 
 app.post('/api/employees', (req, res) => {
-  const { name, avatar, department } = req.body || {};
+  const { id, name, avatar, department } = req.body || {};
 
   if (!name || !name.trim() || !avatar || !department) {
     return res.status(400).json({ error: '缺少必要字段: name, avatar, department' });
   }
 
   const data = readData();
+
+  if (id) {
+    const existing = data.employees.find(e => e.id === id);
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+  }
+
   const newEmployee = {
-    id: generateId(),
+    id: id || generateId(),
     name: name.trim(),
     avatar,
     totalLikes: 0,
@@ -133,7 +141,7 @@ app.get('/api/records', (req, res) => {
 });
 
 app.post('/api/records', (req, res) => {
-  const { employeeId, bucketType, timestamp } = req.body || {};
+  const { id, employeeId, bucketType, timestamp, likes } = req.body || {};
 
   if (!employeeId || !bucketType) {
     return res.status(400).json({ error: '缺少必要字段: employeeId, bucketType' });
@@ -141,17 +149,24 @@ app.post('/api/records', (req, res) => {
 
   const data = readData();
 
+  if (id) {
+    const existing = data.records.find(r => r.id === id);
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+  }
+
   const empExists = data.employees.some(e => e.id === employeeId);
   if (!empExists) {
     return res.status(400).json({ error: '员工不存在' });
   }
 
   const newRecord = {
-    id: generateId(),
+    id: id || generateId(),
     employeeId,
     bucketType,
     timestamp: timestamp || new Date().toISOString(),
-    likes: 0,
+    likes: typeof likes === 'number' ? likes : 0,
   };
 
   data.records.unshift(newRecord);
@@ -173,6 +188,7 @@ app.post('/api/records/batch', (req, res) => {
   const data = readData();
   const createdRecords = [];
   const errors = [];
+  const existingRecordIds = new Set(data.records.map(r => r.id));
 
   records.forEach((rec, idx) => {
     const { employeeId, bucketType, timestamp } = rec || {};
@@ -185,6 +201,14 @@ app.post('/api/records/batch', (req, res) => {
       errors.push(`第 ${idx + 1} 条记录员工不存在`);
       return;
     }
+    if (rec.id && existingRecordIds.has(rec.id)) {
+      const existing = data.records.find(r => r.id === rec.id);
+      const alreadyReturned = createdRecords.some(r => r.id === existing.id);
+      if (!alreadyReturned) {
+        createdRecords.push(existing);
+      }
+      return;
+    }
     const newRecord = {
       id: rec.id || generateId(),
       employeeId,
@@ -193,6 +217,7 @@ app.post('/api/records/batch', (req, res) => {
       likes: rec.likes || 0,
     };
     data.records.unshift(newRecord);
+    existingRecordIds.add(newRecord.id);
     createdRecords.push(newRecord);
   });
 
@@ -237,13 +262,21 @@ app.get('/api/comments', (req, res) => {
 });
 
 app.post('/api/comments', (req, res) => {
-  const { recordId, employeeId, content } = req.body || {};
+  const { id, recordId, employeeId, content, timestamp } = req.body || {};
 
   if (!recordId || !employeeId || !content || !content.trim()) {
     return res.status(400).json({ error: '缺少必要字段: recordId, employeeId, content' });
   }
 
   const data = readData();
+  data.comments = data.comments || [];
+
+  if (id) {
+    const existing = data.comments.find(c => c.id === id);
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+  }
 
   const recordExists = data.records.some(r => r.id === recordId);
   if (!recordExists) {
@@ -256,14 +289,14 @@ app.post('/api/comments', (req, res) => {
   }
 
   const newComment = {
-    id: generateId(),
+    id: id || generateId(),
     recordId,
     employeeId,
     content: content.trim(),
-    timestamp: new Date().toISOString(),
+    timestamp: timestamp || new Date().toISOString(),
   };
 
-  data.comments = [...(data.comments || []), newComment];
+  data.comments = [...data.comments, newComment];
 
   if (writeData(data)) {
     res.status(201).json(newComment);
