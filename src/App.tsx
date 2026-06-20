@@ -7,15 +7,17 @@ import HallOfFame from '@/pages/HallOfFame';
 import HeroProfile from '@/pages/HeroProfile';
 import { useAppStore } from '@/store';
 import { useWaterReminder } from '@/hooks/useWaterReminder';
+import WaterReminderBanner from '@/components/WaterReminderBanner';
 import WaterReminderModal from '@/components/WaterReminderModal';
 
 export default function App() {
   const initialize = useAppStore(s => s.initialize);
   const { reminderConfig } = useAppStore();
-  const [showReminder, setShowReminder] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleReminderTrigger = useCallback(() => {
-    setShowReminder(true);
+    setShowBanner(true);
   }, []);
 
   useWaterReminder(handleReminderTrigger);
@@ -24,8 +26,25 @@ export default function App() {
     initialize();
   }, [initialize]);
 
+  const handleBannerClose = () => {
+    setShowBanner(false);
+  };
+
+  const handleBannerAction = () => {
+    setShowBanner(false);
+    setShowModal(true);
+  };
+
   return (
     <>
+      <WaterReminderBanner
+        isOpen={showBanner}
+        onClose={handleBannerClose}
+        message={reminderConfig.title || '该换水了'}
+        onAction={handleBannerAction}
+        actionText="立即打卡"
+      />
+
       <Router>
         <Routes>
           <Route element={<Layout />}>
@@ -38,8 +57,8 @@ export default function App() {
       </Router>
 
       <WaterReminderModal
-        isOpen={showReminder}
-        onClose={() => setShowReminder(false)}
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
         title={reminderConfig.title}
         message={reminderConfig.message}
       />

@@ -776,7 +776,7 @@ export default function Ranking() {
             </div>
           </div>
         </div>
-      }
+      )}
     </div>
   );
 }

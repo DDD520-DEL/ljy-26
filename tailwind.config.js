@@ -40,6 +40,7 @@ export default {
         'ripple': 'ripple 1.5s ease-out infinite',
         'bounce-in': 'bounceIn 0.5s ease-out',
         'fade-in-up': 'fadeInUp 0.6s ease-out',
+        'slide-down': 'slideDown 0.5s ease-out',
         'shimmer': 'shimmer 2s linear infinite',
         'count-up': 'countUp 0.8s ease-out',
         'like-pop': 'likePop 0.4s ease-out',
@@ -48,6 +49,10 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         ripple: {
           '0%': { transform: 'scale(1)', opacity: '0.6' },
