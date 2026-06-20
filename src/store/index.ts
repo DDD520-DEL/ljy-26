@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Employee, WaterRecord, BucketType, Department, Comment } from '@/types';
-import { INITIAL_EMPLOYEES, STORAGE_KEY } from '@/constants';
+import type { Employee, WaterRecord, BucketType, Department, Comment, ReminderConfig } from '@/types';
+import { INITIAL_EMPLOYEES, STORAGE_KEY, DEFAULT_REMINDER_CONFIG } from '@/constants';
 import { generateId, generateMockRecords, generateMockComments } from '@/utils';
 import { syncManager, type SyncState } from '@/api/syncManager';
 import { api, isServerReachable } from '@/api';
@@ -11,6 +11,7 @@ interface PersistedStateRaw {
   likedRecordIds: string[];
   comments: Comment[];
   currentCommenterId: string | null;
+  reminderConfig: ReminderConfig;
 }
 
 interface PersistedState {
@@ -19,6 +20,7 @@ interface PersistedState {
   likedRecords: Set<string>;
   comments: Comment[];
   currentCommenterId: string | null;
+  reminderConfig: ReminderConfig;
 }
 
 interface AppState extends PersistedState {
@@ -34,6 +36,7 @@ interface AppState extends PersistedState {
   addComment: (recordId: string, employeeId: string, content: string) => Comment;
   getCommentsByRecord: (recordId: string) => Comment[];
   setCurrentCommenter: (employeeId: string) => void;
+  updateReminderConfig: (config: ReminderConfig) => void;
 
   initialize: () => Promise<void>;
   refreshFromServer: () => Promise<void>;
@@ -48,6 +51,7 @@ function serializeState(state: PersistedState): PersistedStateRaw {
     likedRecordIds: Array.from(state.likedRecords),
     comments: state.comments,
     currentCommenterId: state.currentCommenterId,
+    reminderConfig: state.reminderConfig,
   };
 }
 
@@ -58,6 +62,7 @@ function deserializeState(raw: PersistedStateRaw): PersistedState {
     likedRecords: new Set(raw.likedRecordIds || []),
     comments: raw.comments || [],
     currentCommenterId: raw.currentCommenterId || null,
+    reminderConfig: raw.reminderConfig || { ...DEFAULT_REMINDER_CONFIG },
   };
 }
 
@@ -140,6 +145,7 @@ function getInitialLocalState(): PersistedState {
     likedRecords: new Set<string>(),
     comments,
     currentCommenterId: employees[0]?.id || null,
+    reminderConfig: { ...DEFAULT_REMINDER_CONFIG },
   };
   saveToStorage(initial);
   return initial;
@@ -150,7 +156,8 @@ function mergeServerIntoLocal(
   serverEmployees: Employee[],
   serverRecords: WaterRecord[],
   serverLikedIds: string[],
-  serverComments: Comment[]
+  serverComments: Comment[],
+  serverReminderConfig?: ReminderConfig
 ): PersistedState {
   const localEmpMap = new Map(local.employees.map(e => [e.id, { ...e }]));
   serverEmployees.forEach(emp => {
@@ -230,6 +237,7 @@ function mergeServerIntoLocal(
     likedRecords: mergedLiked,
     comments: mergedComments,
     currentCommenterId: local.currentCommenterId,
+    reminderConfig: serverReminderConfig || local.reminderConfig,
   };
 }
 
@@ -315,6 +323,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       likedRecords,
       comments: state.comments,
       currentCommenterId: state.currentCommenterId,
+      reminderConfig: state.reminderConfig,
     };
     saveToStorage(newState);
     set(newState);
@@ -331,6 +340,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newState: PersistedState = { ...state, currentCommenterId: employeeId };
     saveToStorage(newState);
     set({ currentCommenterId: employeeId });
+  },
+
+  updateReminderConfig: (config: ReminderConfig): void => {
+    const state = get();
+    const newState: PersistedState = { ...state, reminderConfig: config };
+    saveToStorage(newState);
+    set({ reminderConfig: config });
+    syncManager.enqueue('updateReminderConfig', config);
   },
 
   addComment: (recordId: string, employeeId: string, content: string): Comment => {
@@ -384,7 +401,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           cached.employees,
           cached.records,
           cached.likedRecordIds,
-          cached.comments
+          cached.comments,
+          cached.reminderConfig
         );
         saveToStorage(merged);
         set({ ...merged, serverLastModified: cached.lastModified });
@@ -404,7 +422,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         serverData.employees,
         serverData.records,
         serverData.likedRecordIds,
-        serverData.comments
+        serverData.comments,
+        serverData.reminderConfig
       );
       saveToStorage(merged);
       syncManager.setCachedServerData(serverData);
@@ -428,7 +447,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           cached.employees,
           cached.records,
           cached.likedRecordIds,
-          cached.comments
+          cached.comments,
+          cached.reminderConfig
         );
         saveToStorage(merged);
         set({ ...merged, serverLastModified: cached.lastModified });
@@ -455,7 +475,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         serverData.employees,
         serverData.records,
         serverData.likedRecordIds,
-        serverData.comments
+        serverData.comments,
+        serverData.reminderConfig
       );
       saveToStorage(merged);
       syncManager.setCachedServerData(serverData);
@@ -477,6 +498,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       comments: state.comments,
       likedRecordIds: Array.from(state.likedRecords),
       currentCommenterId: state.currentCommenterId,
+      reminderConfig: state.reminderConfig,
     });
 
     if (result) {
@@ -486,7 +508,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         result.employees,
         result.records,
         result.likedRecordIds,
-        result.comments
+        result.comments,
+        result.reminderConfig
       );
       saveToStorage(merged);
       set({

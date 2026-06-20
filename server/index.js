@@ -22,6 +22,12 @@ const DEFAULT_DATA = {
   likedRecordIds: [],
   comments: [],
   currentCommenterId: '1',
+  reminderConfig: {
+    enabled: true,
+    time: '15:00',
+    title: '换水提醒',
+    message: '饮水机水位如何？需要换水的话，快来打卡吧！',
+  },
   _lastModified: Date.now(),
 };
 
@@ -73,8 +79,46 @@ app.get('/api/data', (req, res) => {
     likedRecordIds: data.likedRecordIds || [],
     comments: data.comments || [],
     currentCommenterId: data.currentCommenterId || null,
+    reminderConfig: data.reminderConfig || DEFAULT_DATA.reminderConfig,
     lastModified: data._lastModified,
   });
+});
+
+app.get('/api/reminder-config', (req, res) => {
+  const data = readData();
+  res.json(data.reminderConfig || DEFAULT_DATA.reminderConfig);
+});
+
+app.put('/api/reminder-config', (req, res) => {
+  const { enabled, time, title, message } = req.body || {};
+
+  if (typeof enabled !== 'boolean') {
+    return res.status(400).json({ error: 'enabled 必须是布尔值' });
+  }
+
+  if (enabled) {
+    if (!time || typeof time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+      return res.status(400).json({ error: 'time 格式不正确，应为 HH:mm' });
+    }
+  }
+
+  const data = readData();
+  const existingConfig = data.reminderConfig || DEFAULT_DATA.reminderConfig;
+
+  const newConfig = {
+    enabled,
+    time: time || existingConfig.time,
+    title: typeof title === 'string' ? title : existingConfig.title,
+    message: typeof message === 'string' ? message : existingConfig.message,
+  };
+
+  data.reminderConfig = newConfig;
+
+  if (writeData(data)) {
+    res.json(newConfig);
+  } else {
+    res.status(500).json({ error: '保存数据失败' });
+  }
 });
 
 app.get('/api/employees', (req, res) => {
@@ -312,6 +356,7 @@ app.post('/api/sync', (req, res) => {
     comments = [],
     likedRecordIds = [],
     currentCommenterId = null,
+    reminderConfig = null,
     clientLastModified = 0,
   } = req.body || {};
 
@@ -362,6 +407,13 @@ app.post('/api/sync', (req, res) => {
     serverData.currentCommenterId = currentCommenterId;
   }
 
+  if (reminderConfig && typeof reminderConfig.enabled === 'boolean') {
+    serverData.reminderConfig = {
+      ...(serverData.reminderConfig || DEFAULT_DATA.reminderConfig),
+      ...reminderConfig,
+    };
+  }
+
   serverData.records.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   if (writeData(serverData)) {
@@ -373,6 +425,7 @@ app.post('/api/sync', (req, res) => {
       mergedComments: serverData.comments || [],
       mergedLikedRecordIds: serverData.likedRecordIds || [],
       currentCommenterId: serverData.currentCommenterId,
+      mergedReminderConfig: serverData.reminderConfig || DEFAULT_DATA.reminderConfig,
       lastModified: serverData._lastModified,
     });
   } else {

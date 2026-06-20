@@ -58,3 +58,10 @@ export interface RankingEntry {
   likes: number;
   badge: BadgeConfig;
 }
+
+export interface ReminderConfig {
+  enabled: boolean;
+  time: string;
+  title: string;
+  message: string;
+}

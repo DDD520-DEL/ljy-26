@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig } from '@/types';
 import { api, isServerReachable, type ServerData } from '@/api';
 
 export type PendingActionType =
@@ -6,7 +6,8 @@ export type PendingActionType =
   | 'addEmployee'
   | 'likeRecord'
   | 'addComment'
-  | 'updateEmployee';
+  | 'updateEmployee'
+  | 'updateReminderConfig';
 
 export interface PendingAction {
   id: string;
@@ -211,6 +212,11 @@ class SyncManager {
           await api.addComment(payload);
           return true;
         }
+        case 'updateReminderConfig': {
+          const payload = action.payload as ReminderConfig;
+          await api.updateReminderConfig(payload);
+          return true;
+        }
         default:
           return true;
       }
@@ -270,6 +276,7 @@ class SyncManager {
     comments: Comment[];
     likedRecordIds: string[];
     currentCommenterId: string | null;
+    reminderConfig?: ReminderConfig;
   }): Promise<ServerData | null> {
     this.updateState({ isSyncing: true });
 
@@ -292,6 +299,7 @@ class SyncManager {
         likedRecordIds: result.mergedLikedRecordIds,
         comments: result.mergedComments,
         currentCommenterId: result.currentCommenterId,
+        reminderConfig: result.mergedReminderConfig,
         lastModified: result.lastModified,
       };
 

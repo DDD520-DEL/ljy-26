@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig } from '@/types';
 
 const isDev = import.meta.env.DEV;
 export const API_BASE_URL = isDev ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3002');
@@ -9,6 +9,7 @@ export interface ServerData {
   likedRecordIds: string[];
   comments: Comment[];
   currentCommenterId: string | null;
+  reminderConfig: ReminderConfig;
   lastModified: number;
 }
 
@@ -18,6 +19,7 @@ export interface SyncRequest {
   comments?: Comment[];
   likedRecordIds?: string[];
   currentCommenterId?: string | null;
+  reminderConfig?: ReminderConfig;
   clientLastModified?: number;
 }
 
@@ -29,6 +31,7 @@ export interface SyncResponse {
   mergedComments: Comment[];
   mergedLikedRecordIds: string[];
   currentCommenterId: string | null;
+  mergedReminderConfig: ReminderConfig;
   lastModified: number;
 }
 
@@ -153,6 +156,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }, 3);
+  },
+
+  async getReminderConfig(): Promise<ReminderConfig> {
+    return request<ReminderConfig>('/api/reminder-config', { method: 'GET' }, 1);
+  },
+
+  async updateReminderConfig(config: ReminderConfig): Promise<ReminderConfig> {
+    return request<ReminderConfig>('/api/reminder-config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    }, 1);
   },
 };
 

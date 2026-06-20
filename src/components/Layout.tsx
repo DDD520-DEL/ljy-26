@@ -1,9 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Droplets, Trophy, Award, Home } from 'lucide-react';
-import { useMemo } from 'react';
+import { Droplets, Trophy, Award, Home, Bell, BellOff } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import SyncStatusBar from '@/components/SyncStatusBar';
+import ReminderSettings from '@/components/ReminderSettings';
+import { useAppStore } from '@/store';
 
 export default function Layout() {
+  const { reminderConfig } = useAppStore();
+  const [showSettings, setShowSettings] = useState(false);
+
   const waterDrops = useMemo(
     () =>
       Array.from({ length: 6 }, (_, i) => ({
@@ -52,24 +57,42 @@ export default function Layout() {
               </div>
             </NavLink>
 
-            <nav className="flex items-center gap-1 md:gap-2 bg-water-50/80 rounded-2xl p-1">
-              {navItems.map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      isActive
-                        ? 'bg-white text-water-600 shadow-md scale-105'
-                        : 'text-slate-500 hover:text-water-600 hover:bg-white/50'
-                    }`
-                  }
-                >
-                  <item.icon className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="hidden sm:inline">{item.label}</span>
-                </NavLink>
-              ))}
-            </nav>
+            <div className="flex items-center gap-2 md:gap-3">
+              <nav className="flex items-center gap-1 md:gap-2 bg-water-50/80 rounded-2xl p-1">
+                {navItems.map(item => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                        isActive
+                          ? 'bg-white text-water-600 shadow-md scale-105'
+                          : 'text-slate-500 hover:text-water-600 hover:bg-white/50'
+                      }`
+                    }
+                  >
+                    <item.icon className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="hidden sm:inline">{item.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+
+              <button
+                onClick={() => setShowSettings(true)}
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                  reminderConfig.enabled
+                    ? 'bg-water-100 text-water-600 hover:bg-water-200'
+                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                }`}
+                title="提醒设置"
+              >
+                {reminderConfig.enabled ? (
+                  <Bell className="w-5 h-5" />
+                ) : (
+                  <BellOff className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -83,6 +106,8 @@ export default function Layout() {
       <footer className="relative z-10 text-center py-6 text-sm text-slate-400">
         💧 每一滴水都是爱的传递 · 换水英雄榜
       </footer>
+
+      <ReminderSettings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 }

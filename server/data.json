@@ -61,14 +61,14 @@
     {
       "id": "test-rec-2",
       "employeeId": "2",
-      "bucketType": "small",
+      "bucketType": "3G",
       "timestamp": "2025-07-08T13:00:00.000Z",
       "likes": 0
     },
     {
       "id": "test-rec-1",
       "employeeId": "1",
-      "bucketType": "big",
+      "bucketType": "5G",
       "timestamp": "2025-07-08T12:00:00.000Z",
       "likes": 0
     }
@@ -76,5 +76,11 @@
   "likedRecordIds": [],
   "comments": [],
   "currentCommenterId": "1",
+  "reminderConfig": {
+    "enabled": true,
+    "time": "15:00",
+    "title": "换水提醒",
+    "message": "饮水机水位如何？需要换水的话，快来打卡吧！"
+  },
   "_lastModified": 1781927012407
 }

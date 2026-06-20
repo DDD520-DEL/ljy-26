@@ -1,4 +1,4 @@
-import type { Employee, BucketConfig, BadgeConfig, DepartmentConfig } from '@/types';
+import type { Employee, BucketConfig, BadgeConfig, DepartmentConfig, ReminderConfig } from '@/types';
 
 export const DEPARTMENTS: DepartmentConfig[] = [
   { id: 'rd', name: '研发部', icon: '💻', color: 'text-blue-600', bgColor: 'bg-blue-100' },
@@ -48,3 +48,10 @@ export const ENCOURAGE_MESSAGES = [
   '这份心意，大家都记得！',
   '滴水之恩，当以赞相报！',
 ];
+
+export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
+  enabled: true,
+  time: '15:00',
+  title: '换水提醒',
+  message: '饮水机水位如何？需要换水的话，快来打卡吧！',
+};
