@@ -349,6 +349,52 @@ app.post('/api/comments', (req, res) => {
   }
 });
 
+app.get('/api/stats/monthly-daily', (req, res) => {
+  const { year, month } = req.query;
+
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+
+  if (isNaN(y) || isNaN(m) || m < 0 || m > 11) {
+    return res.status(400).json({ error: 'year 和 month 参数无效，month 应为 0-11' });
+  }
+
+  const data = readData();
+
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const dailyStats = [];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    dailyStats.push({
+      date: `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      day,
+      total: 0,
+      byBucket: { '5G': 0, '3G': 0, 'MINI': 0 },
+    });
+  }
+
+  data.records.forEach(record => {
+    const d = new Date(record.timestamp);
+    if (d.getFullYear() === y && d.getMonth() === m) {
+      const dayIdx = d.getDate() - 1;
+      if (dayIdx >= 0 && dayIdx < dailyStats.length) {
+        dailyStats[dayIdx].total += 1;
+        const bucketType = record.bucketType || '5G';
+        if (dailyStats[dayIdx].byBucket[bucketType] !== undefined) {
+          dailyStats[dayIdx].byBucket[bucketType] += 1;
+        }
+      }
+    }
+  });
+
+  res.json({
+    year: y,
+    month: m,
+    daysInMonth,
+    dailyStats,
+  });
+});
+
 app.post('/api/sync', (req, res) => {
   const {
     employees = [],

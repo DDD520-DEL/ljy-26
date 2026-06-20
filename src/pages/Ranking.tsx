@@ -7,6 +7,7 @@ import type { Department } from '@/types';
 import { DEPARTMENTS } from '@/constants';
 import Top3Hero from '@/components/Top3Hero';
 import FloatingButton from '@/components/FloatingButton';
+import MonthlyTrendChart from '@/components/MonthlyTrendChart';
 
 export default function Ranking() {
   const { employees, records } = useAppStore();
@@ -274,6 +275,10 @@ export default function Ranking() {
             </div>
           </div>
         )}
+      </section>
+
+      <section className="animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
+        <MonthlyTrendChart year={selectedMonth.year} month={selectedMonth.month} />
       </section>
 
       <FloatingButton />

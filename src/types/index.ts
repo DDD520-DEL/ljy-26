@@ -65,3 +65,23 @@ export interface ReminderConfig {
   title: string;
   message: string;
 }
+
+export interface DailyBucketStats {
+  '5G': number;
+  '3G': number;
+  'MINI': number;
+}
+
+export interface DailyStat {
+  date: string;
+  day: number;
+  total: number;
+  byBucket: DailyBucketStats;
+}
+
+export interface MonthlyDailyStats {
+  year: number;
+  month: number;
+  daysInMonth: number;
+  dailyStats: DailyStat[];
+}

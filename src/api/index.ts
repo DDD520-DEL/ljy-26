@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, MonthlyDailyStats } from '@/types';
 
 const isDev = import.meta.env.DEV;
 export const API_BASE_URL = isDev ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3002');
@@ -166,6 +166,12 @@ export const api = {
     return request<ReminderConfig>('/api/reminder-config', {
       method: 'PUT',
       body: JSON.stringify(config),
+    }, 1);
+  },
+
+  async getMonthlyDailyStats(year: number, month: number): Promise<MonthlyDailyStats> {
+    return request<MonthlyDailyStats>(`/api/stats/monthly-daily?year=${year}&month=${month}`, {
+      method: 'GET',
     }, 1);
   },
 };
