@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Droplets, Trophy, Award, Home } from 'lucide-react';
 import { useMemo } from 'react';
+import SyncStatusBar from '@/components/SyncStatusBar';
 
 export default function Layout() {
   const waterDrops = useMemo(
@@ -76,6 +77,8 @@ export default function Layout() {
       <main className="relative z-10 container mx-auto px-4 md:px-0 py-6 md:py-10 pb-32">
         <Outlet />
       </main>
+
+      <SyncStatusBar />
 
       <footer className="relative z-10 text-center py-6 text-sm text-slate-400">
         💧 每一滴水都是爱的传递 · 换水英雄榜

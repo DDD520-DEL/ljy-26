@@ -1,0 +1,73 @@
+{
+  "employees": [
+    {
+      "id": "1",
+      "name": "张伟",
+      "avatar": "👨‍💼",
+      "totalLikes": 0,
+      "department": "rd"
+    },
+    {
+      "id": "2",
+      "name": "李娜",
+      "avatar": "👩‍💼",
+      "totalLikes": 0,
+      "department": "rd"
+    },
+    {
+      "id": "3",
+      "name": "王强",
+      "avatar": "👨‍🔧",
+      "totalLikes": 0,
+      "department": "rd"
+    },
+    {
+      "id": "4",
+      "name": "刘芳",
+      "avatar": "👩‍🎨",
+      "totalLikes": 0,
+      "department": "marketing"
+    },
+    {
+      "id": "5",
+      "name": "陈明",
+      "avatar": "👨‍💻",
+      "totalLikes": 0,
+      "department": "marketing"
+    },
+    {
+      "id": "6",
+      "name": "赵丽",
+      "avatar": "👩‍🔬",
+      "totalLikes": 0,
+      "department": "marketing"
+    },
+    {
+      "id": "7",
+      "name": "孙磊",
+      "avatar": "👨‍🎨",
+      "totalLikes": 0,
+      "department": "admin"
+    },
+    {
+      "id": "8",
+      "name": "周雪",
+      "avatar": "👩‍🏫",
+      "totalLikes": 0,
+      "department": "admin"
+    }
+  ],
+  "records": [
+    {
+      "id": "mqls18fic06ip1njt",
+      "employeeId": "2",
+      "bucketType": "3G",
+      "timestamp": "2026-06-20T03:07:06.492Z",
+      "likes": 0
+    }
+  ],
+  "likedRecordIds": [],
+  "comments": [],
+  "currentCommenterId": "1",
+  "_lastModified": 1781924827374
+}
