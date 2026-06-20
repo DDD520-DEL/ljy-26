@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
+import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight, Search, X } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, formatMonthLabel, getLastWeekChampions, getTodayStars } from '@/utils';
 import type { Department, MonthlySummary } from '@/types';
@@ -20,6 +20,9 @@ export default function Home() {
   const [currentMonthSummary, setCurrentMonthSummary] = useState<MonthlySummary | null>(null);
   const [lastMonthSummary, setLastMonthSummary] = useState<MonthlySummary | null>(null);
   const [monthlySummaryLoading, setMonthlySummaryLoading] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const now = useMemo(() => new Date(), []);
   const currentYear = now.getFullYear();
@@ -62,12 +65,40 @@ export default function Home() {
     return records.filter(r => deptIds.has(r.employeeId));
   }, [records, filteredEmployees, selectedDept]);
 
+  const searchedAndDateFilteredRecords = useMemo(() => {
+    let result = filteredRecords;
+
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.trim().toLowerCase();
+      const matchedEmployeeIds = new Set(
+        employees
+          .filter(e => e.name.toLowerCase().includes(keyword))
+          .map(e => e.id)
+      );
+      result = result.filter(r => matchedEmployeeIds.has(r.employeeId));
+    }
+
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      result = result.filter(r => new Date(r.timestamp) >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter(r => new Date(r.timestamp) <= end);
+    }
+
+    return result;
+  }, [filteredRecords, searchKeyword, employees, startDate, endDate]);
+
   const monthlyRanking = useMemo(
     () => getMonthlyRanking(filteredRecords, filteredEmployees, currentYear, currentMonth),
     [filteredRecords, filteredEmployees, currentYear, currentMonth]
   );
 
-  const recentRecords = useMemo(() => filteredRecords.slice(0, 15), [filteredRecords]);
+  const recentRecords = useMemo(() => searchedAndDateFilteredRecords.slice(0, 15), [searchedAndDateFilteredRecords]);
 
   const weeklyChampionData = useMemo(
     () => getLastWeekChampions(records, employees),
@@ -257,7 +288,69 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-water-50 dark:bg-slate-700/50 text-water-600 dark:text-water-400 text-xs md:text-sm font-medium">
             <Droplets className="w-3.5 h-3.5" />
-            共 {filteredRecords.length} 条记录
+            共 {searchedAndDateFilteredRecords.length} 条记录
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-6 shadow-card border border-slate-100 dark:border-slate-700 animate-fade-in-up">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={e => setSearchKeyword(e.target.value)}
+                placeholder="搜索换水英雄姓名..."
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-water-300 dark:focus:ring-water-600 focus:border-water-400 dark:focus:border-water-500 transition-all"
+              />
+              {searchKeyword && (
+                <button
+                  onClick={() => setSearchKeyword('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="relative flex items-center">
+                <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  placeholder="开始日期"
+                  className="pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-water-300 dark:focus:ring-water-600 focus:border-water-400 dark:focus:border-water-500 transition-all"
+                />
+              </div>
+
+              <span className="text-slate-400 text-sm font-medium">至</span>
+
+              <div className="relative flex items-center">
+                <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  placeholder="结束日期"
+                  className="pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-water-300 dark:focus:ring-water-600 focus:border-water-400 dark:focus:border-water-500 transition-all"
+                />
+              </div>
+
+              {(searchKeyword || startDate || endDate) && (
+                <button
+                  onClick={() => {
+                    setSearchKeyword('');
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                  className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap"
+                >
+                  重置
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
