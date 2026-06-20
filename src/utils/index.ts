@@ -204,6 +204,41 @@ export function getDepartmentStats(
   }).sort((a, b) => b.totalRecords - a.totalRecords);
 }
 
+export function getMonthlyDepartmentStats(
+  employees: Employee[],
+  records: WaterRecord[],
+  year: number,
+  month: number
+): DepartmentStats[] {
+  const monthRecords = records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  return DEPARTMENTS.map(dept => {
+    const deptEmployees = employees.filter(e => e.department === dept.id);
+    const deptEmployeeIds = new Set(deptEmployees.map(e => e.id));
+    const deptRecords = monthRecords.filter(r => deptEmployeeIds.has(r.employeeId));
+
+    const totalLiters = deptRecords.reduce((sum, r) => {
+      const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+      return sum + liters;
+    }, 0);
+
+    const totalLikes = deptRecords.reduce((sum, r) => sum + r.likes, 0);
+
+    const activeEmployees = new Set(deptRecords.map(r => r.employeeId)).size;
+
+    return {
+      department: dept,
+      totalRecords: deptRecords.length,
+      totalLiters: Math.round(totalLiters * 10) / 10,
+      totalLikes,
+      employeeCount: activeEmployees,
+    };
+  }).sort((a, b) => b.totalRecords - a.totalRecords);
+}
+
 export function getDepartmentFilteredRanking(
   records: WaterRecord[],
   employees: Employee[],

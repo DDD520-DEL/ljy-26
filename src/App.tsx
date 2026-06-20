@@ -5,6 +5,7 @@ import Home from '@/pages/Home';
 import Ranking from '@/pages/Ranking';
 import HallOfFame from '@/pages/HallOfFame';
 import HeroProfile from '@/pages/HeroProfile';
+import DepartmentBattle from '@/pages/DepartmentBattle';
 import { useAppStore } from '@/store';
 import { useWaterReminder } from '@/hooks/useWaterReminder';
 import WaterReminderBanner from '@/components/WaterReminderBanner';
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/ranking" element={<Ranking />} />
             <Route path="/hall-of-fame" element={<HallOfFame />} />
+            <Route path="/department-battle" element={<DepartmentBattle />} />
             <Route path="/hero/:employeeId" element={<HeroProfile />} />
           </Route>
         </Routes>
