@@ -11,6 +11,7 @@ import ActivityItem from '@/components/ActivityItem';
 import FloatingButton from '@/components/FloatingButton';
 import WeeklyChampionCard from '@/components/WeeklyChampionCard';
 import MonthOverMonthPanel from '@/components/MonthOverMonthPanel';
+import MonthlyBarChart from '@/components/MonthlyBarChart';
 
 export default function Home() {
   const { employees, records } = useAppStore();
@@ -229,6 +230,10 @@ export default function Home() {
           查看完整榜单
           <ArrowRight className="w-4 h-4" />
         </NavLink>
+      </section>
+
+      <section>
+        <MonthlyBarChart records={filteredRecords} year={currentYear} month={currentMonth} />
       </section>
 
       <section>
