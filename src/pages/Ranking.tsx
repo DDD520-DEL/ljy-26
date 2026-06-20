@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Heart, Users, ChevronDown, BarChart3, Download, Flame, Droplets, MessageCircle } from 'lucide-react';
+import { Trophy, Heart, Users, ChevronDown, BarChart3, Download, Flame, Droplets, MessageCircle, Share2 } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem, getMonthlyHeatRanking, exportHeatToExcel, type HeatExportDataItem } from '@/utils';
+import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem, getMonthlyHeatRanking, exportHeatToExcel, type HeatExportDataItem, generateWaterRankingImage, generateHeatRankingImage, downloadImage } from '@/utils';
 import type { Department, RankingEntry, HeatRankingEmployee } from '@/types';
 import { DEPARTMENTS } from '@/constants';
 import FloatingButton from '@/components/FloatingButton';
@@ -175,6 +175,7 @@ export default function Ranking() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
   const [activeTab, setActiveTab] = useState<RankingTab>('water');
+  const [isExportingImage, setIsExportingImage] = useState(false);
 
   const filteredEmployees = useMemo(() => {
     if (selectedDept === 'all') return employees;
@@ -267,6 +268,47 @@ export default function Ranking() {
     exportHeatToExcel(exportData, sheetName, filename);
   };
 
+  const handleShareWaterImage = async () => {
+    if (waterRanking.length === 0) return;
+    setIsExportingImage(true);
+    try {
+      const dataUrl = await generateWaterRankingImage({
+        year: selectedMonth.year,
+        month: selectedMonth.month,
+        ranking: waterRanking,
+        totalRecords: waterStats.records,
+        totalLikes: waterStats.likes,
+        totalPeople: waterStats.people,
+      });
+      const dateStr = formatDateForFilename(new Date());
+      const monthLabel = formatMonthLabel(selectedMonth.year, selectedMonth.month).replace(/年|月/g, '');
+      downloadImage(dataUrl, `月度换水榜_${monthLabel}_${dateStr}.png`);
+    } finally {
+      setIsExportingImage(false);
+    }
+  };
+
+  const handleShareHeatImage = async () => {
+    if (heatRanking.length === 0) return;
+    setIsExportingImage(true);
+    try {
+      const dataUrl = await generateHeatRankingImage({
+        year: selectedMonth.year,
+        month: selectedMonth.month,
+        ranking: heatRanking,
+        totalHeat: heatStats.totalHeat,
+        totalRecords: heatStats.totalRecords,
+        totalComments: heatStats.totalComments,
+        totalPeople: heatStats.people,
+      });
+      const dateStr = formatDateForFilename(new Date());
+      const monthLabel = formatMonthLabel(selectedMonth.year, selectedMonth.month).replace(/年|月/g, '');
+      downloadImage(dataUrl, `月度热度榜_${monthLabel}_${dateStr}.png`);
+    } finally {
+      setIsExportingImage(false);
+    }
+  };
+
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="animate-fade-in-up">
@@ -283,12 +325,21 @@ export default function Ranking() {
 
           <div className="flex flex-wrap items-center gap-3">
             <button
+              onClick={activeTab === 'water' ? handleShareWaterImage : handleShareHeatImage}
+              disabled={currentRanking.length === 0 || isExportingImage}
+              className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl shadow-card hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${activeTab === 'water' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600' : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'}`}
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="font-semibold text-sm">{isExportingImage ? '生成中...' : '分享图片'}</span>
+            </button>
+
+            <button
               onClick={activeTab === 'water' ? handleWaterExport : handleHeatExport}
               disabled={currentRanking.length === 0}
               className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl shadow-card hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${activeTab === 'water' ? 'bg-water-500 hover:bg-water-600' : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'}`}
             >
               <Download className="w-4 h-4" />
-              <span className="font-semibold text-sm">导出</span>
+              <span className="font-semibold text-sm">导出 Excel</span>
             </button>
 
             <div className="relative">

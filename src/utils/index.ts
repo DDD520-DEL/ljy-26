@@ -649,3 +649,409 @@ export function exportHeatToExcel(data: HeatExportDataItem[], sheetName: string,
     XLSX.writeFile(workbook, `${filename}.xlsx`);
   });
 }
+
+interface WaterRankingShareData {
+  year: number;
+  month: number;
+  ranking: RankingEntry[];
+  totalRecords: number;
+  totalLikes: number;
+  totalPeople: number;
+}
+
+interface HeatRankingShareData {
+  year: number;
+  month: number;
+  ranking: HeatRankingEmployee[];
+  totalHeat: number;
+  totalRecords: number;
+  totalComments: number;
+  totalPeople: number;
+}
+
+function drawRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function drawEmoji(ctx: CanvasRenderingContext2D, emoji: string, x: number, y: number, size: number) {
+  ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, x, y);
+}
+
+export async function generateWaterRankingImage(data: WaterRankingShareData): Promise<string> {
+  const { year, month, ranking, totalRecords, totalLikes, totalPeople } = data;
+  const displayCount = Math.min(ranking.length, 15);
+  const cardHeight = 80;
+  const headerHeight = 280;
+  const footerHeight = 80;
+  const canvasHeight = headerHeight + displayCount * cardHeight + footerHeight;
+  const canvasWidth = 750;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  const ctx = canvas.getContext('2d')!;
+
+  const gradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
+  gradient.addColorStop(0, '#e0f2fe');
+  gradient.addColorStop(0.5, '#f0fdfa');
+  gradient.addColorStop(1, '#fef3c7');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+  ctx.beginPath();
+  ctx.arc(650, 80, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+  ctx.beginPath();
+  ctx.arc(80, 180, 100, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 40px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏆 月度换水排行榜', canvasWidth / 2, 70);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '22px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText(`${year}年${month + 1}月`, canvasWidth / 2, 110);
+
+  const statY = 155;
+  const statWidth = 200;
+  const statGap = 30;
+  const statStartX = (canvasWidth - statWidth * 3 - statGap * 2) / 2;
+
+  const stats = [
+    { icon: '🪣', label: '换水总数', value: String(totalRecords), color: '#0ea5e9' },
+    { icon: '👥', label: '参与人数', value: String(totalPeople), color: '#8b5cf6' },
+    { icon: '❤️', label: '总点赞数', value: String(totalLikes), color: '#f43f5e' },
+  ];
+
+  stats.forEach((stat, idx) => {
+    const x = statStartX + idx * (statWidth + statGap);
+    ctx.fillStyle = '#ffffff';
+    drawRoundRect(ctx, x, statY, statWidth, 90, 16);
+    ctx.fill();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 2;
+    drawRoundRect(ctx, x, statY, statWidth, 90, 16);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    drawEmoji(ctx, stat.icon, x + 35, statY + 45, 28);
+
+    ctx.fillStyle = stat.color;
+    ctx.font = 'bold 28px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(stat.value, x + 65, statY + 40);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText(stat.label, x + 65, statY + 68);
+  });
+
+  const listStartY = headerHeight;
+
+  for (let i = 0; i < displayCount; i++) {
+    const entry = ranking[i];
+    const y = listStartY + i * cardHeight + 10;
+    const isTop3 = i < 3;
+    const medals = ['🥇', '🥈', '🥉'];
+
+    ctx.fillStyle = isTop3 ? '#ffffff' : '#ffffff';
+    drawRoundRect(ctx, 25, y, canvasWidth - 50, cardHeight - 20, 16);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.04)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 1;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    if (isTop3) {
+      ctx.strokeStyle = i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : '#d97706';
+      ctx.lineWidth = 2;
+      drawRoundRect(ctx, 25, y, canvasWidth - 50, cardHeight - 20, 16);
+      ctx.stroke();
+    }
+
+    const rankX = 65;
+    const rankY = y + (cardHeight - 20) / 2;
+
+    if (isTop3) {
+      drawEmoji(ctx, medals[i], rankX, rankY, 36);
+    } else {
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.arc(rankX, rankY, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), rankX, rankY);
+    }
+
+    drawEmoji(ctx, entry.employee.avatar, 130, rankY, 40);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(entry.employee.name, 180, rankY - 8);
+
+    ctx.fillStyle = entry.badge.color.replace('text-', '');
+    const badgeColors: Record<string, string> = {
+      'text-slate-600': '#475569',
+      'text-amber-700': '#b45309',
+      'text-slate-500': '#64748b',
+      'text-yellow-600': '#ca8a04',
+      'text-purple-600': '#9333ea',
+    };
+    ctx.fillStyle = badgeColors[entry.badge.color] || '#64748b';
+    ctx.font = '14px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText(`${entry.badge.icon} ${entry.badge.name}`, 180, rankY + 18);
+
+    const progressWidth = 200;
+    const progressX = canvasWidth - 320;
+    const maxRecords = ranking[0]?.records || 1;
+    const progress = (entry.records / maxRecords) * progressWidth;
+
+    ctx.fillStyle = '#f1f5f9';
+    drawRoundRect(ctx, progressX, rankY - 8, progressWidth, 10, 5);
+    ctx.fill();
+
+    const progressGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+    progressGradient.addColorStop(0, '#06b6d4');
+    progressGradient.addColorStop(1, '#0ea5e9');
+    ctx.fillStyle = progressGradient;
+    drawRoundRect(ctx, progressX, rankY - 8, progress, 10, 5);
+    ctx.fill();
+
+    ctx.fillStyle = '#0ea5e9';
+    ctx.font = 'bold 26px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(String(entry.records), canvasWidth - 100, rankY);
+
+    ctx.fillStyle = '#0ea5e9';
+    ctx.font = '12px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText('次换水', canvasWidth - 100, rankY + 18);
+
+    drawEmoji(ctx, '❤️', canvasWidth - 50, rankY - 5, 18);
+    ctx.fillStyle = '#f43f5e';
+    ctx.font = 'bold 16px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(entry.likes), canvasWidth - 50, rankY + 16);
+  }
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('💧 换水英雄榜 · 为每一位默默付出的同事点赞 💧', canvasWidth / 2, canvasHeight - 35);
+
+  return canvas.toDataURL('image/png');
+}
+
+export async function generateHeatRankingImage(data: HeatRankingShareData): Promise<string> {
+  const { year, month, ranking, totalHeat, totalRecords, totalComments, totalPeople } = data;
+  const displayCount = Math.min(ranking.length, 15);
+  const cardHeight = 80;
+  const headerHeight = 280;
+  const footerHeight = 80;
+  const canvasHeight = headerHeight + displayCount * cardHeight + footerHeight;
+  const canvasWidth = 750;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  const ctx = canvas.getContext('2d')!;
+
+  const gradient = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight);
+  gradient.addColorStop(0, '#fff7ed');
+  gradient.addColorStop(0.5, '#fef3c7');
+  gradient.addColorStop(1, '#fce7f3');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  ctx.fillStyle = 'rgba(249, 115, 22, 0.08)';
+  ctx.beginPath();
+  ctx.arc(650, 80, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(236, 72, 153, 0.08)';
+  ctx.beginPath();
+  ctx.arc(80, 180, 100, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 40px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔥 月度热度排行榜', canvasWidth / 2, 70);
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '22px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText(`${year}年${month + 1}月`, canvasWidth / 2, 110);
+
+  const statY = 155;
+  const statWidth = 150;
+  const statGap = 20;
+  const statStartX = (canvasWidth - statWidth * 4 - statGap * 3) / 2;
+
+  const stats = [
+    { icon: '🔥', label: '总热度', value: String(totalHeat), color: '#f97316' },
+    { icon: '🪣', label: '换水', value: String(totalRecords), color: '#0ea5e9' },
+    { icon: '💬', label: '评论', value: String(totalComments), color: '#f59e0b' },
+    { icon: '👥', label: '人数', value: String(totalPeople), color: '#8b5cf6' },
+  ];
+
+  stats.forEach((stat, idx) => {
+    const x = statStartX + idx * (statWidth + statGap);
+    ctx.fillStyle = '#ffffff';
+    drawRoundRect(ctx, x, statY, statWidth, 90, 16);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 2;
+    drawRoundRect(ctx, x, statY, statWidth, 90, 16);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    drawEmoji(ctx, stat.icon, x + 25, statY + 30, 24);
+
+    ctx.fillStyle = stat.color;
+    ctx.font = 'bold 24px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(stat.value, x + statWidth / 2, statY + 62);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText(stat.label, x + statWidth / 2, statY + 80);
+  });
+
+  const listStartY = headerHeight;
+
+  for (let i = 0; i < displayCount; i++) {
+    const entry = ranking[i];
+    const y = listStartY + i * cardHeight + 10;
+    const isTop3 = i < 3;
+    const medals = ['🥇', '🥈', '🥉'];
+
+    ctx.fillStyle = '#ffffff';
+    drawRoundRect(ctx, 25, y, canvasWidth - 50, cardHeight - 20, 16);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.04)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 1;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    if (isTop3) {
+      ctx.strokeStyle = i === 0 ? '#f97316' : i === 1 ? '#94a3b8' : '#d97706';
+      ctx.lineWidth = 2;
+      drawRoundRect(ctx, 25, y, canvasWidth - 50, cardHeight - 20, 16);
+      ctx.stroke();
+    }
+
+    const rankX = 65;
+    const rankY = y + (cardHeight - 20) / 2;
+
+    if (isTop3) {
+      drawEmoji(ctx, medals[i], rankX, rankY, 36);
+    } else {
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.arc(rankX, rankY, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), rankX, rankY);
+    }
+
+    drawEmoji(ctx, entry.employeeAvatar, 130, rankY, 40);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(entry.employeeName, 180, rankY - 8);
+
+    ctx.fillStyle = '#f97316';
+    ctx.font = '14px "PingFang SC", "Microsoft YaHei", sans-serif';
+    const hasRecent = entry.recentRecords > 0 || entry.recentLikes > 0 || entry.recentComments > 0;
+    if (hasRecent) {
+      ctx.fillText('🔥 近期活跃', 180, rankY + 18);
+    } else {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(`换水${entry.records} · 点赞${entry.likes} · 评论${entry.comments}`, 180, rankY + 18);
+    }
+
+    const progressWidth = 160;
+    const progressX = canvasWidth - 300;
+    const maxHeat = ranking[0]?.heatScore || 1;
+    const progress = (entry.heatScore / maxHeat) * progressWidth;
+
+    ctx.fillStyle = '#f1f5f9';
+    drawRoundRect(ctx, progressX, rankY - 8, progressWidth, 10, 5);
+    ctx.fill();
+
+    const progressGradient = ctx.createLinearGradient(progressX, 0, progressX + progressWidth, 0);
+    progressGradient.addColorStop(0, '#f97316');
+    progressGradient.addColorStop(1, '#ef4444');
+    ctx.fillStyle = progressGradient;
+    drawRoundRect(ctx, progressX, rankY - 8, progress, 10, 5);
+    ctx.fill();
+
+    ctx.fillStyle = '#f97316';
+    ctx.font = 'bold 26px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(String(entry.heatScore), canvasWidth - 110, rankY);
+
+    ctx.fillStyle = '#f97316';
+    ctx.font = '12px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillText('热度分', canvasWidth - 110, rankY + 18);
+
+    drawEmoji(ctx, '🪣', canvasWidth - 65, rankY - 10, 16);
+    ctx.fillStyle = '#0ea5e9';
+    ctx.font = 'bold 13px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(entry.records), canvasWidth - 65, rankY + 12);
+  }
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔥 热度英雄榜 · 点赞评论互动起来吧 🔥', canvasWidth / 2, canvasHeight - 35);
+
+  return canvas.toDataURL('image/png');
+}
+
+export function downloadImage(dataUrl: string, filename: string): void {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = dataUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
