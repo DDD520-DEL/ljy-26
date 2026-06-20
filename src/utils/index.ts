@@ -1090,3 +1090,58 @@ export function downloadImage(dataUrl: string, filename: string): void {
   link.click();
   document.body.removeChild(link);
 }
+
+export interface TodayStar {
+  employee: Employee;
+  records: number;
+  totalLiters: number;
+  likes: number;
+}
+
+export function getTodayStars(
+  records: WaterRecord[],
+  employees: Employee[]
+): TodayStar[] {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  const todayRecords = records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d >= todayStart && d < todayEnd;
+  });
+
+  if (todayRecords.length === 0) return [];
+
+  const empMap = new Map<string, { records: number; likes: number; totalLiters: number }>();
+  todayRecords.forEach(r => {
+    const existing = empMap.get(r.employeeId) || { records: 0, likes: 0, totalLiters: 0 };
+    const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+    empMap.set(r.employeeId, {
+      records: existing.records + 1,
+      likes: existing.likes + r.likes,
+      totalLiters: existing.totalLiters + liters,
+    });
+  });
+
+  const stars: TodayStar[] = [];
+  empMap.forEach((data, empId) => {
+    const employee = employees.find(e => e.id === empId);
+    if (employee) {
+      stars.push({
+        employee,
+        records: data.records,
+        totalLiters: Math.round(data.totalLiters * 10) / 10,
+        likes: data.likes,
+      });
+    }
+  });
+
+  stars.sort((a, b) => {
+    if (b.records !== a.records) return b.records - a.records;
+    return b.likes - a.likes;
+  });
+
+  return stars;
+}

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getMonthlyRanking, formatMonthLabel, getLastWeekChampions } from '@/utils';
+import { getMonthlyRanking, formatMonthLabel, getLastWeekChampions, getTodayStars } from '@/utils';
 import type { Department, MonthlySummary } from '@/types';
 import { DEPARTMENTS } from '@/constants';
 import { api } from '@/api';
@@ -12,6 +12,7 @@ import FloatingButton from '@/components/FloatingButton';
 import WeeklyChampionCard from '@/components/WeeklyChampionCard';
 import MonthOverMonthPanel from '@/components/MonthOverMonthPanel';
 import MonthlyBarChart from '@/components/MonthlyBarChart';
+import TodayStar from '@/components/TodayStar';
 
 export default function Home() {
   const { employees, records } = useAppStore();
@@ -73,6 +74,11 @@ export default function Home() {
     [records, employees]
   );
 
+  const todayStars = useMemo(
+    () => getTodayStars(records, employees),
+    [records, employees]
+  );
+
   const monthlyStats = useMemo(() => {
     if (currentMonthSummary && selectedDept === 'all') {
       const monthRecords = filteredRecords.filter(r => {
@@ -117,6 +123,8 @@ export default function Home() {
 
   return (
     <div className="space-y-8 md:space-y-12">
+      <TodayStar stars={todayStars} />
+
       {weeklyChampionData && (
         <WeeklyChampionCard
           champions={weeklyChampionData.champions}

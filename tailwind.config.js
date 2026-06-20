@@ -44,6 +44,8 @@ export default {
         'shimmer': 'shimmer 2s linear infinite',
         'count-up': 'countUp 0.8s ease-out',
         'like-pop': 'likePop 0.4s ease-out',
+        'bounce-slow': 'bounceSlow 2s ease-in-out infinite',
+        'pulse-slow': 'pulseSlow 3s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -80,6 +82,14 @@ export default {
           '0%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.4)' },
           '100%': { transform: 'scale(1)' },
+        },
+        bounceSlow: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        pulseSlow: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
         },
       },
       boxShadow: {
