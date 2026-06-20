@@ -151,7 +151,7 @@ export function generateMockRecords(employees: Employee[]): WaterRecord[] {
   const bucketTypes: Array<'5G' | '3G' | 'MINI'> = ['5G', '5G', '5G', '3G', 'MINI'];
   const now = Date.now();
 
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 40; i++) {
     const emp = employees[Math.floor(Math.random() * employees.length)];
     const daysAgo = Math.floor(Math.random() * 60);
     const hoursAgo = Math.floor(Math.random() * 24);

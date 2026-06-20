@@ -1,23 +1,53 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Droplets, Trophy, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, formatMonthLabel, getLastWeekChampions } from '@/utils';
-import type { Department } from '@/types';
+import type { Department, MonthlySummary } from '@/types';
 import { DEPARTMENTS } from '@/constants';
+import { api } from '@/api';
 import Top3Hero from '@/components/Top3Hero';
 import ActivityItem from '@/components/ActivityItem';
 import FloatingButton from '@/components/FloatingButton';
 import WeeklyChampionCard from '@/components/WeeklyChampionCard';
+import MonthOverMonthPanel from '@/components/MonthOverMonthPanel';
 
 export default function Home() {
   const { employees, records } = useAppStore();
   const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
+  const [currentMonthSummary, setCurrentMonthSummary] = useState<MonthlySummary | null>(null);
+  const [lastMonthSummary, setLastMonthSummary] = useState<MonthlySummary | null>(null);
+  const [monthlySummaryLoading, setMonthlySummaryLoading] = useState(false);
 
   const now = useMemo(() => new Date(), []);
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
   const monthLabel = formatMonthLabel(currentYear, currentMonth);
+
+  const lastMonthDate = useMemo(() => {
+    const d = new Date(currentYear, currentMonth - 1, 1);
+    return { year: d.getFullYear(), month: d.getMonth() };
+  }, [currentYear, currentMonth]);
+
+  useEffect(() => {
+    async function fetchMonthlySummaries() {
+      setMonthlySummaryLoading(true);
+      try {
+        const [current, last] = await Promise.all([
+          api.getMonthlySummary(currentYear, currentMonth),
+          api.getMonthlySummary(lastMonthDate.year, lastMonthDate.month).catch(() => null),
+        ]);
+        setCurrentMonthSummary(current);
+        setLastMonthSummary(last);
+      } catch (err) {
+        console.error('获取月度统计失败:', err);
+      } finally {
+        setMonthlySummaryLoading(false);
+      }
+    }
+
+    fetchMonthlySummaries();
+  }, [currentYear, currentMonth, lastMonthDate.year, lastMonthDate.month, records.length]);
 
   const filteredEmployees = useMemo(() => {
     if (selectedDept === 'all') return employees;
@@ -43,6 +73,23 @@ export default function Home() {
   );
 
   const monthlyStats = useMemo(() => {
+    if (currentMonthSummary && selectedDept === 'all') {
+      const monthRecords = filteredRecords.filter(r => {
+        const d = new Date(r.timestamp);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+      const totalLiters = monthRecords.reduce((sum, r) => {
+        const liters = r.bucketType === '5G' ? 18.9 : r.bucketType === '3G' ? 11.3 : 5;
+        return sum + liters;
+      }, 0);
+      return {
+        records: currentMonthSummary.totalRecords,
+        likes: currentMonthSummary.totalLikes,
+        liters: totalLiters.toFixed(1),
+        people: currentMonthSummary.totalParticipants,
+      };
+    }
+
     const monthRecords = filteredRecords.filter(r => {
       const d = new Date(r.timestamp);
       return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
@@ -58,7 +105,7 @@ export default function Home() {
       liters: totalLiters.toFixed(1),
       people: new Set(monthRecords.map(r => r.employeeId)).size,
     };
-  }, [filteredRecords, currentYear, currentMonth]);
+  }, [currentMonthSummary, selectedDept, filteredRecords, currentYear, currentMonth]);
 
   const stats = [
     { label: '本月换水', value: monthlyStats.records, icon: '🪣', color: 'from-blue-400 to-water-600' },
@@ -144,6 +191,14 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {selectedDept === 'all' && (
+        <MonthOverMonthPanel
+          currentMonth={currentMonthSummary}
+          lastMonth={lastMonthSummary}
+          loading={monthlySummaryLoading}
+        />
+      )}
 
       <section>
         <div className="flex items-center justify-between mb-6">

@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, MonthlyDailyStats } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, MonthlyDailyStats, MonthlySummary } from '@/types';
 
 const isDev = import.meta.env.DEV;
 export const API_BASE_URL = isDev ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3002');
@@ -171,6 +171,12 @@ export const api = {
 
   async getMonthlyDailyStats(year: number, month: number): Promise<MonthlyDailyStats> {
     return request<MonthlyDailyStats>(`/api/stats/monthly-daily?year=${year}&month=${month}`, {
+      method: 'GET',
+    }, 1);
+  },
+
+  async getMonthlySummary(year: number, month: number): Promise<MonthlySummary> {
+    return request<MonthlySummary>(`/api/stats/monthly-summary?year=${year}&month=${month}`, {
       method: 'GET',
     }, 1);
   },

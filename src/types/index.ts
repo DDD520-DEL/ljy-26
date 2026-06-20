@@ -85,3 +85,22 @@ export interface MonthlyDailyStats {
   daysInMonth: number;
   dailyStats: DailyStat[];
 }
+
+export interface TopRankingEmployee {
+  employeeId: string;
+  employeeName: string;
+  employeeAvatar: string;
+  department: Department;
+  records: number;
+  likes: number;
+}
+
+export interface MonthlySummary {
+  year: number;
+  month: number;
+  monthLabel: string;
+  totalRecords: number;
+  totalLikes: number;
+  totalParticipants: number;
+  top10: TopRankingEmployee[];
+}

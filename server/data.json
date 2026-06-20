@@ -59,18 +59,284 @@
   ],
   "records": [
     {
-      "id": "test-rec-2",
-      "employeeId": "2",
+      "id": "mqm2xdu30n95s1t18",
+      "employeeId": "7",
       "bucketType": "3G",
-      "timestamp": "2025-07-08T13:00:00.000Z",
+      "timestamp": "2026-06-19T11:12:03.530Z",
+      "likes": 5
+    },
+    {
+      "id": "mqm2xdu3kt9kwdszr",
+      "employeeId": "1",
+      "bucketType": "5G",
+      "timestamp": "2026-06-18T10:12:03.530Z",
+      "likes": 3
+    },
+    {
+      "id": "mqm2xdu3o56scwaeq",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-06-17T19:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu3lxle0dv6f",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-06-14T15:12:03.530Z",
+      "likes": 7
+    },
+    {
+      "id": "mqm2xdu39025790ij",
+      "employeeId": "1",
+      "bucketType": "5G",
+      "timestamp": "2026-06-10T09:12:03.530Z",
+      "likes": 5
+    },
+    {
+      "id": "mqm2xdu36qsw3wscu",
+      "employeeId": "5",
+      "bucketType": "5G",
+      "timestamp": "2026-06-10T09:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu3ry1uhdy18",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-06-09T23:12:03.530Z",
+      "likes": 6
+    },
+    {
+      "id": "mqm2xdu3x76xn84iu",
+      "employeeId": "5",
+      "bucketType": "5G",
+      "timestamp": "2026-06-09T05:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu3rq5jdtgft",
+      "employeeId": "5",
+      "bucketType": "5G",
+      "timestamp": "2026-06-09T04:12:03.530Z",
+      "likes": 4
+    },
+    {
+      "id": "mqm2xdu30y4kusrmg",
+      "employeeId": "8",
+      "bucketType": "3G",
+      "timestamp": "2026-06-08T10:12:03.530Z",
+      "likes": 4
+    },
+    {
+      "id": "mqm2xdu3srqo05y7x",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-06-06T12:12:03.530Z",
+      "likes": 6
+    },
+    {
+      "id": "mqm2xdu3awxu9g9gg",
+      "employeeId": "3",
+      "bucketType": "5G",
+      "timestamp": "2026-06-06T08:12:03.530Z",
+      "likes": 7
+    },
+    {
+      "id": "mqm2xdu3sf8g1cwob",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-06-06T01:12:03.530Z",
+      "likes": 6
+    },
+    {
+      "id": "mqm2xdu375k8bdofr",
+      "employeeId": "5",
+      "bucketType": "5G",
+      "timestamp": "2026-06-04T01:12:03.530Z",
+      "likes": 5
+    },
+    {
+      "id": "mqm2xdu32gsk8wxqg",
+      "employeeId": "6",
+      "bucketType": "3G",
+      "timestamp": "2026-06-02T06:12:03.530Z",
+      "likes": 7
+    },
+    {
+      "id": "mqm2xdu3gprpaziea",
+      "employeeId": "7",
+      "bucketType": "5G",
+      "timestamp": "2026-06-01T01:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu3bcqusmik6",
+      "employeeId": "6",
+      "bucketType": "5G",
+      "timestamp": "2026-05-31T18:12:03.530Z",
       "likes": 0
     },
     {
-      "id": "test-rec-1",
+      "id": "mqm2xdu3ah47y7hxd",
+      "employeeId": "6",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-30T18:12:03.530Z",
+      "likes": 3
+    },
+    {
+      "id": "mqm2xdu310fzltqwy",
+      "employeeId": "6",
+      "bucketType": "3G",
+      "timestamp": "2026-05-29T09:12:03.530Z",
+      "likes": 5
+    },
+    {
+      "id": "mqm2xdu3y59geai7a",
+      "employeeId": "5",
+      "bucketType": "3G",
+      "timestamp": "2026-05-29T04:12:03.530Z",
+      "likes": 3
+    },
+    {
+      "id": "mqm2xdu3bbfyxd0lf",
+      "employeeId": "2",
+      "bucketType": "5G",
+      "timestamp": "2026-05-27T10:12:03.530Z",
+      "likes": 0
+    },
+    {
+      "id": "mqm2xdu3en5hxteqq",
+      "employeeId": "7",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-26T10:12:03.530Z",
+      "likes": 0
+    },
+    {
+      "id": "mqm2xdu3nez6rml8d",
+      "employeeId": "8",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-26T06:12:03.530Z",
+      "likes": 0
+    },
+    {
+      "id": "mqm2xdu3lrll3g4ib",
+      "employeeId": "2",
+      "bucketType": "5G",
+      "timestamp": "2026-05-22T13:12:03.530Z",
+      "likes": 3
+    },
+    {
+      "id": "mqm2xdu3ozm9p8yg9",
       "employeeId": "1",
       "bucketType": "5G",
-      "timestamp": "2025-07-08T12:00:00.000Z",
+      "timestamp": "2026-05-18T15:12:03.530Z",
+      "likes": 4
+    },
+    {
+      "id": "mqm2xdu3klx1rvl6v",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-05-17T23:12:03.530Z",
+      "likes": 7
+    },
+    {
+      "id": "mqm2xdu3x3gd0b1ku",
+      "employeeId": "2",
+      "bucketType": "3G",
+      "timestamp": "2026-05-17T00:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu36ks7oerx7",
+      "employeeId": "5",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-15T22:12:03.530Z",
+      "likes": 6
+    },
+    {
+      "id": "mqm2xdu33fu8cvvw4",
+      "employeeId": "7",
+      "bucketType": "3G",
+      "timestamp": "2026-05-14T03:12:03.530Z",
+      "likes": 1
+    },
+    {
+      "id": "mqm2xdu3xb5l94lpi",
+      "employeeId": "5",
+      "bucketType": "3G",
+      "timestamp": "2026-05-13T00:12:03.530Z",
+      "likes": 4
+    },
+    {
+      "id": "mqm2xdu3ezuo23wqe",
+      "employeeId": "4",
+      "bucketType": "5G",
+      "timestamp": "2026-05-12T21:12:03.530Z",
       "likes": 0
+    },
+    {
+      "id": "mqm2xdu3y9kg1e5pd",
+      "employeeId": "5",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-11T05:12:03.530Z",
+      "likes": 0
+    },
+    {
+      "id": "mqm2xdu309glnzehp",
+      "employeeId": "6",
+      "bucketType": "5G",
+      "timestamp": "2026-05-08T18:12:03.530Z",
+      "likes": 6
+    },
+    {
+      "id": "mqm2xdu35yoe2gl9y",
+      "employeeId": "7",
+      "bucketType": "5G",
+      "timestamp": "2026-05-08T14:12:03.530Z",
+      "likes": 3
+    },
+    {
+      "id": "mqm2xdu3nxwz64squ",
+      "employeeId": "2",
+      "bucketType": "5G",
+      "timestamp": "2026-05-07T21:12:03.530Z",
+      "likes": 1
+    },
+    {
+      "id": "mqm2xdu3zcnuh64ef",
+      "employeeId": "5",
+      "bucketType": "5G",
+      "timestamp": "2026-05-07T16:12:03.530Z",
+      "likes": 4
+    },
+    {
+      "id": "mqm2xdu3a6eem6cf3",
+      "employeeId": "8",
+      "bucketType": "MINI",
+      "timestamp": "2026-05-02T15:12:03.530Z",
+      "likes": 0
+    },
+    {
+      "id": "mqm2xdu3twy9x0yny",
+      "employeeId": "8",
+      "bucketType": "5G",
+      "timestamp": "2026-05-01T20:12:03.530Z",
+      "likes": 5
+    },
+    {
+      "id": "mqm2xdu3cu11wqnqf",
+      "employeeId": "2",
+      "bucketType": "5G",
+      "timestamp": "2026-04-27T07:12:03.530Z",
+      "likes": 2
+    },
+    {
+      "id": "mqm2xdu3m13hj7syg",
+      "employeeId": "3",
+      "bucketType": "5G",
+      "timestamp": "2026-04-22T01:12:03.530Z",
+      "likes": 6
     }
   ],
   "likedRecordIds": [],
@@ -82,5 +348,5 @@
     "title": "换水提醒",
     "message": "饮水机水位如何？需要换水的话，快来打卡吧！"
   },
-  "_lastModified": 1781927012407
+  "_lastModified": 1781943123537
 }

@@ -7,18 +7,48 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+function generateMockServerRecords(employees) {
+  const records = [];
+  const bucketTypes = ['5G', '5G', '5G', '3G', 'MINI'];
+  const now = Date.now();
+
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  }
+
+  for (let i = 0; i < 40; i++) {
+    const emp = employees[Math.floor(Math.random() * employees.length)];
+    const daysAgo = Math.floor(Math.random() * 60);
+    const hoursAgo = Math.floor(Math.random() * 24);
+    const timestamp = new Date(now - daysAgo * 86400000 - hoursAgo * 3600000).toISOString();
+
+    records.push({
+      id: generateId(),
+      employeeId: emp.id,
+      bucketType: bucketTypes[Math.floor(Math.random() * bucketTypes.length)],
+      timestamp,
+      likes: Math.floor(Math.random() * 8),
+    });
+  }
+
+  records.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return records;
+}
+
+const DEFAULT_EMPLOYEES = [
+  { id: '1', name: '张伟', avatar: '👨‍💼', totalLikes: 0, department: 'rd' },
+  { id: '2', name: '李娜', avatar: '👩‍💼', totalLikes: 0, department: 'rd' },
+  { id: '3', name: '王强', avatar: '👨‍🔧', totalLikes: 0, department: 'rd' },
+  { id: '4', name: '刘芳', avatar: '👩‍🎨', totalLikes: 0, department: 'marketing' },
+  { id: '5', name: '陈明', avatar: '👨‍💻', totalLikes: 0, department: 'marketing' },
+  { id: '6', name: '赵丽', avatar: '👩‍🔬', totalLikes: 0, department: 'marketing' },
+  { id: '7', name: '孙磊', avatar: '👨‍🎨', totalLikes: 0, department: 'admin' },
+  { id: '8', name: '周雪', avatar: '👩‍🏫', totalLikes: 0, department: 'admin' },
+];
+
 const DEFAULT_DATA = {
-  employees: [
-    { id: '1', name: '张伟', avatar: '👨‍💼', totalLikes: 0, department: 'rd' },
-    { id: '2', name: '李娜', avatar: '👩‍💼', totalLikes: 0, department: 'rd' },
-    { id: '3', name: '王强', avatar: '👨‍🔧', totalLikes: 0, department: 'rd' },
-    { id: '4', name: '刘芳', avatar: '👩‍🎨', totalLikes: 0, department: 'marketing' },
-    { id: '5', name: '陈明', avatar: '👨‍💻', totalLikes: 0, department: 'marketing' },
-    { id: '6', name: '赵丽', avatar: '👩‍🔬', totalLikes: 0, department: 'marketing' },
-    { id: '7', name: '孙磊', avatar: '👨‍🎨', totalLikes: 0, department: 'admin' },
-    { id: '8', name: '周雪', avatar: '👩‍🏫', totalLikes: 0, department: 'admin' },
-  ],
-  records: [],
+  employees: DEFAULT_EMPLOYEES,
+  records: generateMockServerRecords(DEFAULT_EMPLOYEES),
   likedRecordIds: [],
   comments: [],
   currentCommenterId: '1',
@@ -392,6 +422,70 @@ app.get('/api/stats/monthly-daily', (req, res) => {
     month: m,
     daysInMonth,
     dailyStats,
+  });
+});
+
+app.get('/api/stats/monthly-summary', (req, res) => {
+  const { year, month } = req.query;
+
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+
+  if (isNaN(y) || isNaN(m) || m < 0 || m > 11) {
+    return res.status(400).json({ error: 'year 和 month 参数无效，month 应为 0-11' });
+  }
+
+  const data = readData();
+
+  const monthRecords = data.records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+
+  const totalRecords = monthRecords.length;
+  const totalLikes = monthRecords.reduce((sum, r) => sum + r.likes, 0);
+  const participantIds = new Set(monthRecords.map(r => r.employeeId));
+  const totalParticipants = participantIds.size;
+
+  const empMap = new Map();
+  monthRecords.forEach(r => {
+    const existing = empMap.get(r.employeeId) || { records: 0, likes: 0 };
+    empMap.set(r.employeeId, {
+      records: existing.records + 1,
+      likes: existing.likes + r.likes,
+    });
+  });
+
+  const ranking = [];
+  empMap.forEach((stats, empId) => {
+    const employee = data.employees.find(e => e.id === empId);
+    if (employee) {
+      ranking.push({
+        employeeId: empId,
+        employeeName: employee.name,
+        employeeAvatar: employee.avatar,
+        department: employee.department,
+        records: stats.records,
+        likes: stats.likes,
+      });
+    }
+  });
+
+  ranking.sort((a, b) => {
+    if (b.records !== a.records) return b.records - a.records;
+    return b.likes - a.likes;
+  });
+
+  const top10 = ranking.slice(0, 10);
+
+  res.json({
+    year: y,
+    month: m,
+    monthLabel: `${y}年${m + 1}月`,
+    totalRecords,
+    totalLikes,
+    totalParticipants,
+    top10,
   });
 });
 
