@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Employee, WaterRecord, BucketType, Department, Comment, ReminderConfig, AnonymousMessage, MessageCategory } from '@/types';
-import { INITIAL_EMPLOYEES, STORAGE_KEY, DEFAULT_REMINDER_CONFIG, ANONYMOUS_ENCOURAGE_TEMPLATES, ANONYMOUS_COMPLAINT_TEMPLATES, ANONYMOUS_OTHER_TEMPLATES } from '@/constants';
+import { INITIAL_EMPLOYEES, STORAGE_KEY, THEME_STORAGE_KEY, DEFAULT_REMINDER_CONFIG, ANONYMOUS_ENCOURAGE_TEMPLATES, ANONYMOUS_COMPLAINT_TEMPLATES, ANONYMOUS_OTHER_TEMPLATES } from '@/constants';
 import { generateId, generateMockRecords, generateMockComments } from '@/utils';
 import { syncManager, type SyncState } from '@/api/syncManager';
 import { api, isServerReachable } from '@/api';
@@ -27,11 +27,15 @@ interface PersistedState {
   likedAnonymousMessages: Set<string>;
 }
 
+type Theme = 'light' | 'dark';
+
 interface AppState extends PersistedState {
   syncState: SyncState;
   serverLastModified: number | null;
   isInitializing: boolean;
   initError: string | null;
+  theme: Theme;
+  isDark: boolean;
 
   addRecord: (employeeId: string, bucketType: BucketType) => WaterRecord;
   addEmployee: (name: string, avatar: string, department: Department) => Employee;
@@ -44,6 +48,9 @@ interface AppState extends PersistedState {
   addAnonymousMessage: (content: string, category: MessageCategory) => AnonymousMessage;
   likeAnonymousMessage: (messageId: string) => void;
   isAnonymousMessageLiked: (messageId: string) => boolean;
+
+  toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
 
   initialize: () => Promise<void>;
   refreshFromServer: () => Promise<void>;
@@ -341,12 +348,44 @@ function mergeServerIntoLocal(
 
 const initialLocal = getInitialLocalState();
 
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'light';
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    return savedTheme;
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme: Theme): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.classList.remove('light', 'dark');
+  document.documentElement.classList.add(theme);
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+}
+
+const initialTheme = getInitialTheme();
+applyTheme(initialTheme);
+
 export const useAppStore = create<AppState>((set, get) => ({
   ...initialLocal,
   syncState: syncManager.getState(),
   serverLastModified: null,
   isInitializing: true,
   initError: null,
+  theme: initialTheme,
+  isDark: initialTheme === 'dark',
+
+  toggleTheme: (): void => {
+    const newTheme = get().theme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+    set({ theme: newTheme, isDark: newTheme === 'dark' });
+  },
+
+  setTheme: (theme: Theme): void => {
+    applyTheme(theme);
+    set({ theme, isDark: theme === 'dark' });
+  },
 
   addRecord: (employeeId: string, bucketType: BucketType): WaterRecord => {
     const newRecord: WaterRecord = {

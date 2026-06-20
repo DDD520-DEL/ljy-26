@@ -9,6 +9,7 @@ import DepartmentBattle from '@/pages/DepartmentBattle';
 import AnonymousWall from '@/pages/AnonymousWall';
 import { useAppStore } from '@/store';
 import { useWaterReminder } from '@/hooks/useWaterReminder';
+import { useTheme } from '@/hooks/useTheme';
 import WaterReminderBanner from '@/components/WaterReminderBanner';
 import WaterReminderModal from '@/components/WaterReminderModal';
 
@@ -17,6 +18,8 @@ export default function App() {
   const { reminderConfig } = useAppStore();
   const [showBanner, setShowBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  useTheme();
 
   const handleReminderTrigger = useCallback(() => {
     setShowBanner(true);

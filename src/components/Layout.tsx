@@ -1,12 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Droplets, Trophy, Award, Home, Bell, BellOff, Swords, MessageSquare } from 'lucide-react';
+import { Droplets, Trophy, Award, Home, Bell, BellOff, Swords, MessageSquare, Sun, Moon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import SyncStatusBar from '@/components/SyncStatusBar';
 import ReminderSettings from '@/components/ReminderSettings';
 import { useAppStore } from '@/store';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function Layout() {
   const { reminderConfig } = useAppStore();
+  const { isDark, toggleTheme } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
 
   const waterDrops = useMemo(
@@ -29,12 +31,12 @@ export default function Layout() {
   ];
 
   return (
-    <div className="min-h-screen water-texture relative overflow-hidden">
+    <div className="min-h-screen water-texture relative overflow-hidden transition-colors duration-300 dark:bg-slate-900">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         {waterDrops.map(drop => (
           <div
             key={drop.id}
-            className="water-drop absolute text-water-400/30 select-none"
+            className="water-drop absolute text-water-400/30 dark:text-water-500/20 select-none"
             style={{
               left: `${drop.left}%`,
               animationDelay: `${drop.delay}s`,
@@ -46,7 +48,7 @@ export default function Layout() {
         ))}
       </div>
 
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/70 border-b border-water-100 shadow-sm">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/70 dark:bg-slate-800/70 border-b border-water-100 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <div className="container mx-auto">
           <div className="flex items-center justify-between h-16 px-4 md:px-0">
             <NavLink to="/" className="flex items-center gap-2 group">
@@ -54,13 +56,13 @@ export default function Layout() {
                 <Droplets className="w-5 h-5 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="font-display text-xl gradient-text">换水英雄榜</h1>
-                <p className="text-xs text-slate-500 -mt-1">办公室的幕后供水英雄</p>
+                <h1 className="font-display text-xl gradient-text dark:gradient-text-dark">换水英雄榜</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1">办公室的幕后供水英雄</p>
               </div>
             </NavLink>
 
             <div className="flex items-center gap-2 md:gap-3">
-              <nav className="flex items-center gap-1 md:gap-2 bg-water-50/80 rounded-2xl p-1">
+              <nav className="flex items-center gap-1 md:gap-2 bg-water-50/80 dark:bg-slate-700/50 rounded-2xl p-1 transition-colors duration-300">
                 {navItems.map(item => (
                   <NavLink
                     key={item.to}
@@ -68,8 +70,8 @@ export default function Layout() {
                     className={({ isActive }) =>
                       `flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                         isActive
-                          ? 'bg-white text-water-600 shadow-md scale-105'
-                          : 'text-slate-500 hover:text-water-600 hover:bg-white/50'
+                          ? 'bg-white dark:bg-slate-600 text-water-600 dark:text-water-400 shadow-md scale-105'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-water-600 dark:hover:text-water-400 hover:bg-white/50 dark:hover:bg-slate-600/50'
                       }`
                     }
                   >
@@ -80,11 +82,23 @@ export default function Layout() {
               </nav>
 
               <button
+                onClick={toggleTheme}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-slate-700 dark:text-amber-400 dark:hover:bg-slate-600"
+                title={isDark ? '切换到亮色模式' : '切换到暗色模式'}
+              >
+                {isDark ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </button>
+
+              <button
                 onClick={() => setShowSettings(true)}
                 className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                   reminderConfig.enabled
-                    ? 'bg-water-100 text-water-600 hover:bg-water-200'
-                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                    ? 'bg-water-100 text-water-600 hover:bg-water-200 dark:bg-water-900/30 dark:text-water-400 dark:hover:bg-water-900/50'
+                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600'
                 }`}
                 title="提醒设置"
               >
@@ -105,7 +119,7 @@ export default function Layout() {
 
       <SyncStatusBar />
 
-      <footer className="relative z-10 text-center py-6 text-sm text-slate-400">
+      <footer className="relative z-10 text-center py-6 text-sm text-slate-400 dark:text-slate-500 transition-colors duration-300">
         💧 每一滴水都是爱的传递 · 换水英雄榜
       </footer>
 

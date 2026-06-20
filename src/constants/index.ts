@@ -37,6 +37,7 @@ export const AVATAR_OPTIONS = [
 ];
 
 export const STORAGE_KEY = 'water-hero-data-v2';
+export const THEME_STORAGE_KEY = 'water-hero-theme';
 
 export const ENCOURAGE_MESSAGES = [
   '每一滴水都是爱的传递！',
