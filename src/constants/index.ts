@@ -24,11 +24,11 @@ export const BUCKET_TYPES: BucketConfig[] = [
 ];
 
 export const BADGE_LEVELS: BadgeConfig[] = [
-  { level: 'rookie', name: '换水新手', icon: '💧', minRecords: 1, color: 'text-slate-600', bgColor: 'bg-slate-100' },
-  { level: 'bronze', name: '青铜水手', icon: '🥉', minRecords: 5, color: 'text-amber-700', bgColor: 'bg-amber-100' },
-  { level: 'silver', name: '白银水侠', icon: '🥈', minRecords: 15, color: 'text-slate-500', bgColor: 'bg-slate-200' },
-  { level: 'gold', name: '黄金水神', icon: '🥇', minRecords: 30, color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-  { level: 'king', name: '王者水帝', icon: '👑', minRecords: 60, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+  { level: 'rookie', name: '换水新手', icon: '💧', minRecords: 1, color: 'text-slate-600 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-700' },
+  { level: 'bronze', name: '青铜水手', icon: '🥉', minRecords: 5, color: 'text-amber-700 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30' },
+  { level: 'silver', name: '白银水侠', icon: '🥈', minRecords: 15, color: 'text-slate-500 dark:text-slate-400', bgColor: 'bg-slate-200 dark:bg-slate-600' },
+  { level: 'gold', name: '黄金水神', icon: '🥇', minRecords: 30, color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30' },
+  { level: 'king', name: '王者水帝', icon: '👑', minRecords: 60, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30' },
 ];
 
 export const AVATAR_OPTIONS = [
@@ -58,9 +58,9 @@ export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
 };
 
 export const MESSAGE_CATEGORIES = [
-  { id: 'encourage' as const, label: '加油鼓励', icon: '💪', color: 'text-green-600', bgColor: 'bg-green-100' },
-  { id: 'complaint' as const, label: '吐槽抱怨', icon: '😤', color: 'text-rose-600', bgColor: 'bg-rose-100' },
-  { id: 'other' as const, label: '其他', icon: '💬', color: 'text-slate-600', bgColor: 'bg-slate-100' },
+  { id: 'encourage' as const, label: '加油鼓励', icon: '💪', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
+  { id: 'complaint' as const, label: '吐槽抱怨', icon: '😤', color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-100 dark:bg-rose-900/30' },
+  { id: 'other' as const, label: '其他', icon: '💬', color: 'text-slate-600 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-700' },
 ];
 
 export const ANONYMOUS_ENCOURAGE_TEMPLATES = [

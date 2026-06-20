@@ -72,7 +72,7 @@ export default function AnonymousWall() {
   };
 
   const filterItems = [
-    { id: 'all' as const, label: '全部', icon: '📋', color: 'text-slate-600', bgColor: 'bg-slate-100' },
+    { id: 'all' as const, label: '全部', icon: '📋', color: 'text-slate-600 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-700' },
     ...MESSAGE_CATEGORIES,
   ];
 
@@ -129,20 +129,20 @@ export default function AnonymousWall() {
       </section>
 
       <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-        <div className="bg-white rounded-3xl shadow-card p-5 md:p-8 border border-slate-100">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-card p-5 md:p-8 border border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center">
               <Send className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
             </div>
             <div>
-              <h2 className="font-display text-xl md:text-2xl text-slate-800">发布匿名留言</h2>
-              <p className="text-xs md:text-sm text-slate-400">你的身份将被完全保密 🔒</p>
+              <h2 className="font-display text-xl md:text-2xl text-slate-800 dark:text-slate-100">发布匿名留言</h2>
+              <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500">你的身份将被完全保密 🔒</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">选择留言类型</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">选择留言类型</label>
               <div className="flex flex-wrap gap-2">
                 {MESSAGE_CATEGORIES.map(cat => (
                   <button
@@ -150,8 +150,8 @@ export default function AnonymousWall() {
                     onClick={() => setCategory(cat.id)}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                       category === cat.id
-                        ? `${cat.bgColor} ${cat.color} ring-2 ring-offset-2 ring-current scale-105 shadow-md`
-                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        ? `${cat.bgColor} ${cat.color} ring-2 ring-offset-2 dark:ring-offset-slate-800 ring-current scale-105 shadow-md`
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -174,14 +174,14 @@ export default function AnonymousWall() {
               </div>
 
               {showTemplates && (
-                <div className="mb-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <p className="text-xs text-indigo-600 mb-2 font-medium">选择一个模板快速填写：</p>
+                <div className="mb-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/20 dark:bg-indig dark:border-indigo-800/30o-900/20 dark:bg-ind00 dark:border-indigo-8ig/30o-900/20 rounded-xl bo dark:border-indigo-800/30rder border-indigo-100 dark:border-indigo-800/30">
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 dark:text-indigo-400 dark:text-indigo-400 dark:text-indigo-400 mb-2 font-medium">选择一个模板快速填写：</p>
                   <div className="flex flex-wrap gap-2">
                     {templates.map((tpl, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleTemplateClick(tpl)}
-                        className="px-3 py-1.5 text-xs bg-white rounded-lg border border-indigo-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 transition-colors text-left max-w-full truncate"
+                        className="px-3 py-1.5 text-xs bg-white dark:bg-slate-800 rounded-lg border border-indigo-200 dark:border-indigo-800/30 text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-300 dark:hover:border-indigo-700/50 transition-colors text-left max-w-full truncate"
                       >
                         {tpl}
                       </button>
@@ -194,12 +194,12 @@ export default function AnonymousWall() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="说点什么吧...你的身份绝对保密 🔒"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none text-sm md:text-base"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none transition-all resize-none text-sm md:text-base"
                 rows={3}
                 maxLength={200}
               />
               <div className="flex justify-between items-center mt-2">
-                <span className={`text-xs ${content.length > 180 ? 'text-rose-500' : 'text-slate-400'}`}>
+                <span className={`text-xs ${content.length > 180 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500'}`}>
                   {content.length}/200
                 </span>
                 <button
@@ -219,24 +219,24 @@ export default function AnonymousWall() {
       <section className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-indigo-100 flex items-center justify-center">
-              <Filter className="w-5 h-5 md:w-6 md:h-6 text-indigo-500" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+              <Filter className="w-5 h-5 md:w-6 md:h-6 text-indigo-500 dark:text-indigo-400" />
             </div>
             <div>
-              <h2 className="font-display text-xl md:text-2xl text-slate-800">留言列表</h2>
-              <p className="text-xs md:text-sm text-slate-400">共 {filteredMessages.length} 条留言</p>
+              <h2 className="font-display text-xl md:text-2xl text-slate-800 dark:text-slate-100">留言列表</h2>
+              <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500">共 {filteredMessages.length} 条留言</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 md:gap-2 bg-slate-100 rounded-xl p-1">
+          <div className="flex flex-wrap gap-1.5 md:gap-2 bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
             {filterItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setFilterCategory(item.id)}
                 className={`flex items-center gap-1 px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
                   filterCategory === item.id
-                    ? 'bg-white text-indigo-600 shadow-md scale-105'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md scale-105'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 <span>{item.icon}</span>
@@ -247,12 +247,12 @@ export default function AnonymousWall() {
         </div>
 
         {filteredMessages.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-10 md:p-16 text-center border border-slate-100">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-3xl p-10 md:p-16 text-center border border-slate-100 dark:border-slate-700">
             <div className="text-5xl md:text-6xl mb-4">💬</div>
-            <h3 className="font-display text-lg md:text-xl text-slate-600 mb-2">
+            <h3 className="font-display text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-2">
               {filterCategory === 'all' ? '暂无留言' : `暂无${MESSAGE_CATEGORIES.find(c => c.id === filterCategory)?.label}留言`}
             </h3>
-            <p className="text-sm md:text-base text-slate-400 max-w-md mx-auto">
+            <p className="text-sm md:text-base text-slate-400 dark:text-slate-500 max-w-md mx-auto">
               {filterCategory === 'all'
                 ? '快来发布第一条匿名留言吧！无论是加油鼓励还是吐槽抱怨，都可以在这里畅所欲言～'
                 : '换个分类看看，或者发布第一条这个类型的留言吧！'}
@@ -268,21 +268,21 @@ export default function AnonymousWall() {
               return (
                 <div
                   key={message.id}
-                  className="bg-white rounded-2xl shadow-card border border-slate-100 p-4 md:p-5 hover:shadow-md transition-all duration-300 animate-fade-in-up"
+                  className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700 p-4 md:p-5 hover:shadow-md transition-all duration-300 animate-fade-in-up"
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div className="flex items-start gap-3 md:gap-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-2xl md:text-3xl flex-shrink-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600">
                       🎭
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="font-display text-sm md:text-base text-slate-800">
+                        <span className="font-display text-sm md:text-base text-slate-800 dark:text-slate-100">
                           匿名用户
                         </span>
                         {isRecent && (
-                          <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-xs font-medium rounded-full">
+                          <span className="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-medium rounded-full">
                             NEW
                           </span>
                         )}
@@ -292,12 +292,12 @@ export default function AnonymousWall() {
                         </span>
                       </div>
 
-                      <p className="text-slate-700 text-sm md:text-base leading-relaxed mb-3">
+                      <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base leading-relaxed mb-3">
                         {message.content}
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-xs md:text-sm text-slate-400">
+                        <div className="flex items-center gap-1 text-xs md:text-sm text-slate-400 dark:text-slate-500">
                           <Clock className="w-3.5 h-3.5" />
                           <span>{formatTimeAgo(message.timestamp)}</span>
                         </div>
@@ -307,8 +307,8 @@ export default function AnonymousWall() {
                           disabled={liked}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs md:text-sm font-medium transition-all duration-200 ${
                             liked
-                              ? 'bg-rose-100 text-rose-500 cursor-default'
-                              : 'bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-rose-500 border border-slate-200 hover:border-rose-200'
+                              ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 cursor-default'
+                              : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-500 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 hover:border-rose-200 dark:hover:border-rose-800/30'
                           }`}
                         >
                           <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />

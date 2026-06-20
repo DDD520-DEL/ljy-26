@@ -23,7 +23,7 @@ function ProgressBar({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-8 md:h-10 bg-slate-100 rounded-full overflow-hidden relative">
+      <div className="flex-1 h-8 md:h-10 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden relative">
         <div
           className={`h-full rounded-full transition-all duration-1000 ease-out ${color} ${
             isLeading ? 'animate-pulse-slow' : ''
@@ -37,10 +37,10 @@ function ProgressBar({
         )}
       </div>
       <div className="text-right min-w-[5rem]">
-        <div className={`font-display text-lg md:text-xl ${isLeading ? 'text-yellow-600' : 'text-slate-700'}`}>
+        <div className={`font-display text-lg md:text-xl ${isLeading ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-700 dark:text-slate-200'}`}>
           {showValue.toLocaleString()}
         </div>
-        <div className="text-[10px] text-slate-400">{unit}</div>
+        <div className="text-[10px] text-slate-400 dark:text-slate-500">{unit}</div>
       </div>
     </div>
   );
@@ -61,21 +61,21 @@ function DepartmentCard({
   const colors = {
     rd: {
       bar: 'bg-gradient-to-r from-blue-400 to-blue-600',
-      border: 'border-blue-200',
-      bg: 'bg-blue-50',
-      glow: 'shadow-blue-200',
+      border: 'border-blue-200 dark:border-blue-800/30',
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      glow: 'shadow-blue-200 dark:shadow-blue-900/20',
     },
     marketing: {
       bar: 'bg-gradient-to-r from-orange-400 to-orange-600',
-      border: 'border-orange-200',
-      bg: 'bg-orange-50',
-      glow: 'shadow-orange-200',
+      border: 'border-orange-200 dark:border-orange-800/30',
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      glow: 'shadow-orange-200 dark:shadow-orange-900/20',
     },
     admin: {
       bar: 'bg-gradient-to-r from-green-400 to-green-600',
-      border: 'border-green-200',
-      bg: 'bg-green-50',
-      glow: 'shadow-green-200',
+      border: 'border-green-200 dark:border-green-800/30',
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      glow: 'shadow-green-200 dark:shadow-green-900/20',
     },
   };
 
@@ -86,7 +86,7 @@ function DepartmentCard({
       className={`relative rounded-3xl p-5 md:p-6 border-2 transition-all duration-500 ${
         isLeading
           ? `${colorScheme.border} ${colorScheme.bg} shadow-lg ${colorScheme.glow} scale-[1.02]`
-          : 'border-slate-100 bg-white shadow-card hover:shadow-md'
+          : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-card hover:shadow-md'
       }`}
     >
       {isLeading && (
@@ -101,7 +101,7 @@ function DepartmentCard({
       <div className="flex items-center gap-3 mb-4">
         <div
           className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-2xl md:text-3xl ${
-            isLeading ? 'bg-gradient-to-br from-yellow-100 to-amber-200' : dept.department.bgColor
+            isLeading ? 'bg-gradient-to-br from-yellow-100 to-amber-200 dark:from-yellow-900/30 dark:to-amber-900/30' : dept.department.bgColor
           } ${isLeading ? 'animate-pulse-slow' : ''}`}
         >
           {dept.department.icon}
@@ -115,7 +115,7 @@ function DepartmentCard({
             {rank === 2 && <span className="text-xl">🥈</span>}
             {rank === 3 && <span className="text-xl">🥉</span>}
           </div>
-          <div className="flex items-center gap-1 text-xs text-slate-400">
+          <div className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
             <Users className="w-3 h-3" />
             <span>{dept.employeeCount} 人参与</span>
           </div>
@@ -125,11 +125,11 @@ function DepartmentCard({
       <div className="space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-sm text-slate-500">
+            <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
               <Droplets className="w-4 h-4 text-water-500" />
               <span>换水总量</span>
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-slate-400 dark:text-slate-500">
               {dept.totalLiters} L
             </div>
           </div>
@@ -145,7 +145,7 @@ function DepartmentCard({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-sm text-slate-500">
+            <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
               <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
               <span>获赞总数</span>
             </div>
@@ -169,24 +169,22 @@ function GapIndicator({
   leading,
   second,
   unit,
-  icon,
   color,
 }: {
   label: string;
   leading: DepartmentStats;
   second: DepartmentStats;
   unit: string;
-  icon: React.ReactNode;
   color: string;
 }) {
   const gap = leading.totalRecords - second.totalRecords;
   const gapLikes = leading.totalLikes - second.totalLikes;
 
   return (
-    <div className={`rounded-2xl p-4 border border-slate-100 ${color}`}>
+    <div className={`rounded-2xl p-4 border border-slate-100 dark:border-slate-700 ${color}`}>
       <div className="flex items-center gap-2 mb-2">
         <Zap className="w-4 h-4 text-yellow-500" />
-        <span className="text-sm font-semibold text-slate-700">{label}</span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</span>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -196,10 +194,10 @@ function GapIndicator({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-display font-bold text-lg">
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-3 py-1 rounded-full font-display font-bold text-lg">
             +{gap}
           </div>
-          <span className="text-xs text-slate-400">{unit}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{unit}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className={`font-bold ${second.department.color}`}>
@@ -209,8 +207,8 @@ function GapIndicator({
         </div>
       </div>
       {gapLikes > 0 && (
-        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-400">点赞差距</span>
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs">
+          <span className="text-slate-400 dark:text-slate-500">点赞差距</span>
           <span className="font-semibold text-rose-500">+{gapLikes} 赞</span>
         </div>
       )}
@@ -269,25 +267,25 @@ export default function DepartmentBattle() {
       <div className="animate-fade-in-up">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center">
               <Swords className="w-6 h-6 md:w-7 md:h-7 text-purple-500" />
             </div>
             <div>
-              <h1 className="font-display text-2xl md:text-3xl text-slate-800">部门对战</h1>
-              <p className="text-sm text-slate-400">三大部门同台竞技，谁是供水最强部门？</p>
+              <h1 className="font-display text-2xl md:text-3xl text-slate-800 dark:text-slate-100">部门对战</h1>
+              <p className="text-sm text-slate-400 dark:text-slate-500">三大部门同台竞技，谁是供水最强部门？</p>
             </div>
           </div>
 
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2.5 bg-white rounded-xl shadow-card hover:shadow-md transition-all border border-slate-100"
+              className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-card hover:shadow-md transition-all border border-slate-100 dark:border-slate-700"
             >
-              <span className="font-semibold text-slate-700">{formatMonthLabel(selectedMonth.year, selectedMonth.month)}</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{formatMonthLabel(selectedMonth.year, selectedMonth.month)}</span>
+              <ChevronDown className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {isDropdownOpen && (
-              <div className="absolute top-full mt-2 left-0 right-0 md:w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-bounce-in">
+              <div className="absolute top-full mt-2 left-0 right-0 md:w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-20 animate-bounce-in">
                 {availableMonths.map(month => (
                   <button
                     key={`${month.year}-${month.month}`}
@@ -297,8 +295,8 @@ export default function DepartmentBattle() {
                     }}
                     className={`w-full px-4 py-3 text-left text-sm transition-colors ${
                       month.year === selectedMonth.year && month.month === selectedMonth.month
-                        ? 'bg-purple-50 text-purple-600 font-semibold'
-                        : 'text-slate-600 hover:bg-purple-50/50'
+                        ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-purple-50/50 dark:hover:bg-purple-900/30'
                     }`}
                   >
                     {month.label}
@@ -313,12 +311,12 @@ export default function DepartmentBattle() {
           {stats.map((stat, idx) => (
             <div
               key={stat.label}
-              className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-slate-100 animate-fade-in-up"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-4 md:p-5 shadow-card border border-slate-100 dark:border-slate-700 animate-fade-in-up"
               style={{ animationDelay: `${idx * 0.1}s` }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">{stat.icon}</span>
-                <span className="text-xs text-slate-400">{stat.label}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">{stat.label}</span>
               </div>
               <div className={`font-display text-xl md:text-2xl bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
                 {stat.value}{stat.unit}
@@ -330,7 +328,7 @@ export default function DepartmentBattle() {
 
       {totalRecords > 0 && leadingDept && secondDept && (
         <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="font-display text-lg md:text-xl text-slate-800 mb-4 flex items-center gap-2">
+          <h2 className="font-display text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-purple-500" />
             <span>实时差距</span>
           </h2>
@@ -340,8 +338,7 @@ export default function DepartmentBattle() {
               leading={leadingDept}
               second={secondDept}
               unit="次换水"
-              icon={<Droplets className="w-4 h-4" />}
-              color="bg-gradient-to-r from-blue-50/50 to-cyan-50/50"
+              color="bg-gradient-to-r from-blue-50/50 to-cyan-50/50 dark:from-blue-900/20 dark:to-cyan-900/20"
             />
             {thirdDept && secondDept.totalRecords > thirdDept.totalRecords && (
               <GapIndicator
@@ -349,8 +346,7 @@ export default function DepartmentBattle() {
                 leading={secondDept}
                 second={thirdDept}
                 unit="次换水"
-                icon={<Droplets className="w-4 h-4" />}
-                color="bg-gradient-to-r from-slate-50/50 to-gray-50/50"
+                color="bg-gradient-to-r from-slate-50/50 to-gray-50/50 dark:from-slate-800/50 dark:to-gray-800/50"
               />
             )}
           </div>
@@ -358,16 +354,16 @@ export default function DepartmentBattle() {
       )}
 
       <section className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-        <h2 className="font-display text-lg md:text-xl text-slate-800 mb-4 flex items-center gap-2">
+        <h2 className="font-display text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-500" />
           <span>部门战绩</span>
         </h2>
 
         {totalRecords === 0 ? (
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-10 text-center shadow-card">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-3xl p-10 text-center shadow-card">
             <div className="text-5xl mb-3">🏆</div>
-            <h3 className="font-display text-lg text-slate-600 mb-1">本月对战尚未开始</h3>
-            <p className="text-sm text-slate-400">各部门还没有换水记录，快来为你的部门争光！</p>
+            <h3 className="font-display text-lg text-slate-600 dark:text-slate-300 mb-1">本月对战尚未开始</h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500">各部门还没有换水记录，快来为你的部门争光！</p>
           </div>
         ) : (
           <div className="grid gap-4 md:gap-6">
@@ -386,16 +382,16 @@ export default function DepartmentBattle() {
 
       {totalRecords > 0 && (
         <section className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 rounded-3xl p-5 md:p-6 border border-purple-100">
+          <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-orange-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20 rounded-3xl p-5 md:p-6 border border-purple-100 dark:border-purple-800/30">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shrink-0">
                 <Trophy className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-display text-base md:text-lg text-slate-800 mb-1">
+                <h3 className="font-display text-base md:text-lg text-slate-800 dark:text-slate-100 mb-1">
                   🏆 {formatMonthLabel(selectedMonth.year, selectedMonth.month)} 冠军部门
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                   恭喜 <span className={`font-bold ${leadingDept.department.color}`}>
                     {leadingDept.department.icon} {leadingDept.department.name}
                   </span> 以 <span className="font-bold text-water-600">{leadingDept.totalRecords} 次换水</span> 和{' '}

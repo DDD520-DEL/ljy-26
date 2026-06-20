@@ -163,7 +163,7 @@ export default function Home() {
 
       <section>
         <div className="flex items-center gap-2 mb-2">
-          <h2 className="font-display text-lg md:text-xl text-slate-800">按部门筛选</h2>
+          <h2 className="font-display text-lg md:text-xl text-slate-800 dark:text-slate-100">按部门筛选</h2>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -171,7 +171,7 @@ export default function Home() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
               selectedDept === 'all'
                 ? 'bg-water-500 text-white shadow-md scale-105'
-                : 'bg-white text-slate-600 hover:bg-water-50 border border-slate-100'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-water-50 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700'
             }`}
           >
             全部部门
@@ -183,7 +183,7 @@ export default function Home() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                 selectedDept === dept.id
                   ? 'bg-water-500 text-white shadow-md scale-105'
-                  : `${dept.bgColor} ${dept.color} hover:opacity-80 border border-slate-100`
+                  : `${dept.bgColor} ${dept.color} hover:opacity-80 border border-slate-100 dark:border-slate-700`
               }`}
             >
               <span>{dept.icon}</span>
@@ -204,17 +204,17 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-yellow-100 flex items-center justify-center">
-              <Trophy className="w-5 h-5 md:w-6 md:h-6 text-yellow-500" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+              <Trophy className="w-5 h-5 md:w-6 md:h-6 text-yellow-500 dark:text-yellow-400" />
             </div>
             <div>
-              <h2 className="font-display text-xl md:text-2xl text-slate-800">本月 TOP3 英雄</h2>
-              <p className="text-xs md:text-sm text-slate-400">谁是本月的换水达人？</p>
+              <h2 className="font-display text-xl md:text-2xl text-slate-800 dark:text-slate-100">本月 TOP3 英雄</h2>
+              <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500">谁是本月的换水达人？</p>
             </div>
           </div>
           <NavLink
             to="/ranking"
-            className="hidden md:flex items-center gap-1.5 text-water-600 hover:text-water-700 text-sm font-medium transition-colors group"
+            className="hidden md:flex items-center gap-1.5 text-water-600 dark:text-water-400 hover:text-water-700 dark:hover:text-water-300 text-sm font-medium transition-colors group"
           >
             完整榜单
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -225,7 +225,7 @@ export default function Home() {
 
         <NavLink
           to="/ranking"
-          className="md:hidden mt-4 w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-white text-water-600 text-sm font-medium shadow-card hover:shadow-md transition-all"
+          className="md:hidden mt-4 w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-white dark:bg-slate-800 text-water-600 dark:text-water-400 text-sm font-medium shadow-card hover:shadow-md transition-all"
         >
           查看完整榜单
           <ArrowRight className="w-4 h-4" />
@@ -239,25 +239,25 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-water-100 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-water-500" />
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-water-100 dark:bg-water-900/30 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-water-500 dark:text-water-400" />
             </div>
             <div>
-              <h2 className="font-display text-xl md:text-2xl text-slate-800">最近换水动态</h2>
-              <p className="text-xs md:text-sm text-slate-400">看看大家最近的贡献～</p>
+              <h2 className="font-display text-xl md:text-2xl text-slate-800 dark:text-slate-100">最近换水动态</h2>
+              <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500">看看大家最近的贡献～</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-water-50 text-water-600 text-xs md:text-sm font-medium">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-water-50 dark:bg-slate-700/50 text-water-600 dark:text-water-400 text-xs md:text-sm font-medium">
             <Droplets className="w-3.5 h-3.5" />
             共 {filteredRecords.length} 条记录
           </div>
         </div>
 
         {recentRecords.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-10 text-center">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-3xl p-10 text-center">
             <div className="text-5xl mb-3">📝</div>
-            <h3 className="font-display text-lg text-slate-600 mb-1">暂无换水记录</h3>
-            <p className="text-sm text-slate-400">点击右下角按钮记录第一条换水记录吧！</p>
+            <h3 className="font-display text-lg text-slate-600 dark:text-slate-300 mb-1">暂无换水记录</h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500">点击右下角按钮记录第一条换水记录吧！</p>
           </div>
         ) : (
           <div className="space-y-4 md:space-y-6">

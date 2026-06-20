@@ -45,10 +45,10 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
 
   if (!hasData) {
     return (
-      <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 text-center shadow-card animate-fade-in-up">
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 text-center shadow-card animate-fade-in-up">
         <div className="text-6xl mb-4">🪣</div>
-        <h3 className="font-display text-xl text-slate-600 mb-2">本月榜单虚位以待</h3>
-        <p className="text-slate-400 text-sm">还没有换水记录，快去成为第一个换水英雄吧！</p>
+        <h3 className="font-display text-xl text-slate-600 dark:text-slate-300 mb-2">本月榜单虚位以待</h3>
+        <p className="text-slate-400 dark:text-slate-500 text-sm">还没有换水记录，快去成为第一个换水英雄吧！</p>
       </div>
     );
   }
@@ -71,9 +71,9 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
             {entry ? (
               <Link
                 to={`/hero/${entry.employee.id}`}
-                className={`relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px] block`}
+                className={`relative bg-white dark:bg-slate-800 rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px] block`}
               >
-                <div className="bg-white rounded-[22px] p-4 md:p-6 relative group">
+                <div className="bg-white dark:bg-slate-800 rounded-[22px] p-4 md:p-6 relative group">
                   {config.crown && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-3xl md:text-4xl animate-float z-10">
                       👑
@@ -89,20 +89,20 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
 
                   <div className={`relative mx-auto ${
                     config.rank === 1 ? 'w-20 h-20 md:w-24 md:h-24' : 'w-16 h-16 md:w-20 md:h-20'
-                  } rounded-full overflow-hidden mb-3 bg-water-50 flex items-center justify-center border-4 border-white shadow-lg group-hover:scale-105 transition-transform`}>
+                  } rounded-full overflow-hidden mb-3 bg-water-50 dark:bg-slate-700/50 flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-lg group-hover:scale-105 transition-transform`}>
                     <div className={`${
                       config.rank === 1 ? 'text-5xl md:text-6xl' : 'text-4xl md:text-5xl'
                     }`}>
                       {entry.employee.avatar}
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-8 h-8 md:w-10 md:h-10 rounded-full ${config.gradient} flex items-center justify-center text-white font-bold text-xs md:text-sm border-2 border-white shadow-md`}>
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-8 h-8 md:w-10 md:h-10 rounded-full ${config.gradient} flex items-center justify-center text-white font-bold text-xs md:text-sm border-2 border-white dark:border-slate-800 shadow-md`}>
                       {config.rank}
                     </div>
                   </div>
 
                   <h3 className={`font-display text-center ${
                     config.rank === 1 ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'
-                  } text-slate-800 mb-1 truncate group-hover:text-water-600 transition-colors`}>
+                  } text-slate-800 dark:text-slate-100 mb-1 truncate group-hover:text-water-600 dark:group-hover:text-water-400 transition-colors`}>
                     {entry.employee.name}
                   </h3>
 
@@ -111,7 +111,7 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
                     <span>{entry.badge.name}</span>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-slate-100">
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
@@ -122,7 +122,7 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
                         } gradient-text`}>
                           {entry.records}
                         </div>
-                        <div className="text-[10px] text-slate-400">换水次数</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">换水次数</div>
                       </div>
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
@@ -130,19 +130,19 @@ export default function Top3Hero({ ranking }: Top3HeroProps) {
                         </div>
                         <div className={`font-display ${
                           config.rank === 1 ? 'text-2xl' : 'text-xl'
-                        } text-rose-500`}>
+                        } text-rose-500 dark:text-rose-400`}>
                           {entry.likes}
                         </div>
-                        <div className="text-[10px] text-slate-400">获得点赞</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">获得点赞</div>
                       </div>
                     </div>
                   </div>
                 </div>
               </Link>
             ) : (
-              <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-dashed border-slate-200 min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center">
+              <div className="bg-white/40 dark:bg-slate-700/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-dashed border-slate-200 dark:border-slate-600 min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center">
                 <div className="text-4xl mb-2 opacity-30">{config.medal}</div>
-                <div className="text-slate-400 text-sm">虚位以待</div>
+                <div className="text-slate-400 dark:text-slate-500 text-sm">虚位以待</div>
               </div>
             )}
           </div>

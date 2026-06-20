@@ -58,15 +58,15 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
 
   return (
     <section className="animate-fade-in-up">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 p-5 md:p-7 shadow-card border border-amber-200/60">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-200/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-yellow-200/20 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/40 dark:via-yellow-900/30 dark:to-orange-900/30 p-5 md:p-7 shadow-card border border-amber-200/60 dark:border-amber-700/40 transition-colors duration-300">
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-200/20 dark:bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-yellow-200/20 dark:bg-yellow-500/10 rounded-full blur-3xl" />
         <div className="absolute top-3 right-12 text-5xl opacity-15 animate-float">🏆</div>
         <div className="absolute bottom-4 right-28 text-3xl opacity-10 animate-float delay-200">⭐</div>
 
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 md:top-4 md:right-4 z-20 w-8 h-8 rounded-full bg-white/60 hover:bg-white/90 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all backdrop-blur-sm border border-slate-200/50"
+          className="absolute top-3 right-3 md:top-4 md:right-4 z-20 w-8 h-8 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-700/90 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-all backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50"
           title="关闭播报"
         >
           <X className="w-4 h-4" />
@@ -79,16 +79,16 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-lg md:text-xl text-amber-800">
+                <h2 className="font-display text-lg md:text-xl text-amber-800 dark:text-amber-200">
                   🏅 周冠军播报
                 </h2>
                 {isTie && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] md:text-xs font-semibold border border-amber-200">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-[10px] md:text-xs font-semibold border border-amber-200 dark:border-amber-700/50">
                     并列第一
                   </span>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-amber-600/70">
+              <p className="text-xs md:text-sm text-amber-600/70 dark:text-amber-400/70">
                 {weekLabel} 换水之星
               </p>
             </div>
@@ -99,11 +99,11 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
               <Link
                 key={champion.employee.id}
                 to={`/hero/${champion.employee.id}`}
-                className={`${isTie ? 'flex-1 min-w-[140px]' : ''} bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-amber-100/80 shadow-sm hover:shadow-md transition-all group block`}
+                className={`${isTie ? 'flex-1 min-w-[140px]' : ''} bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 border border-amber-100/80 dark:border-amber-800/30 shadow-sm hover:shadow-md transition-all group block`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="relative">
-                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center text-3xl md:text-4xl border-2 border-amber-200/60 shadow-inner group-hover:scale-105 transition-transform">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/40 flex items-center justify-center text-3xl md:text-4xl border-2 border-amber-200/60 dark:border-amber-700/40 shadow-inner group-hover:scale-105 transition-transform">
                       {champion.employee.avatar}
                     </div>
                     <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-md">
@@ -111,10 +111,10 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="font-display text-lg md:text-xl text-amber-900 truncate group-hover:text-amber-700 transition-colors">
+                    <div className="font-display text-lg md:text-xl text-amber-900 dark:text-amber-100 truncate group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
                       {champion.employee.name}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-amber-600/70">
+                    <div className="flex items-center gap-1 text-xs text-amber-600/70 dark:text-amber-400/70">
                       <span>{getDeptIcon(champion.employee.department)}</span>
                       <span>{getDeptName(champion.employee.department)}</span>
                     </div>
@@ -122,54 +122,54 @@ export default function WeeklyChampionCard({ champions, weekLabel, weekKey }: We
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center bg-water-50/60 rounded-xl py-2 px-1">
+                  <div className="text-center bg-water-50/60 dark:bg-slate-700/50 rounded-xl py-2 px-1">
                     <div className="flex items-center justify-center mb-0.5">
-                      <Droplets className="w-3.5 h-3.5 text-water-500" />
+                      <Droplets className="w-3.5 h-3.5 text-water-500 dark:text-water-400" />
                     </div>
                     <div className="font-display text-lg gradient-text">{champion.records}</div>
-                    <div className="text-[10px] text-slate-400">换水次数</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">换水次数</div>
                   </div>
-                  <div className="text-center bg-cyan-50/60 rounded-xl py-2 px-1">
+                  <div className="text-center bg-cyan-50/60 dark:bg-slate-700/50 rounded-xl py-2 px-1">
                     <div className="flex items-center justify-center mb-0.5">
                       <span className="text-sm">💧</span>
                     </div>
-                    <div className="font-display text-lg text-cyan-600">{champion.totalLiters}L</div>
-                    <div className="text-[10px] text-slate-400">换水量</div>
+                    <div className="font-display text-lg text-cyan-600 dark:text-cyan-400">{champion.totalLiters}L</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">换水量</div>
                   </div>
-                  <div className="text-center bg-rose-50/60 rounded-xl py-2 px-1">
+                  <div className="text-center bg-rose-50/60 dark:bg-slate-700/50 rounded-xl py-2 px-1">
                     <div className="flex items-center justify-center mb-0.5">
-                      <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                      <Heart className="w-3.5 h-3.5 text-rose-400 dark:text-rose-300 fill-rose-400 dark:fill-rose-300" />
                     </div>
-                    <div className="font-display text-lg text-rose-500">{champion.likes}</div>
-                    <div className="text-[10px] text-slate-400">点赞数</div>
+                    <div className="font-display text-lg text-rose-500 dark:text-rose-400">{champion.likes}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">点赞数</div>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
 
-          <div className="flex items-center gap-4 md:gap-6 bg-white/40 backdrop-blur-sm rounded-xl px-4 py-3 border border-amber-100/50">
-            <div className="flex items-center gap-1.5 text-sm text-amber-700">
-              <Droplets className="w-4 h-4 text-water-500" />
+          <div className="flex items-center gap-4 md:gap-6 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-xl px-4 py-3 border border-amber-100/50 dark:border-amber-800/30">
+            <div className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-300">
+              <Droplets className="w-4 h-4 text-water-500 dark:text-water-400" />
               <span className="font-semibold">{totalRecords}</span>
-              <span className="text-amber-600/60">次换水</span>
+              <span className="text-amber-600/60 dark:text-amber-400/60">次换水</span>
             </div>
-            <div className="w-px h-4 bg-amber-200" />
-            <div className="flex items-center gap-1.5 text-sm text-amber-700">
+            <div className="w-px h-4 bg-amber-200 dark:bg-amber-700/50" />
+            <div className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-300">
               <span>💧</span>
               <span className="font-semibold">{totalLiters}L</span>
-              <span className="text-amber-600/60">总换水量</span>
+              <span className="text-amber-600/60 dark:text-amber-400/60">总换水量</span>
             </div>
-            <div className="w-px h-4 bg-amber-200" />
-            <div className="flex items-center gap-1.5 text-sm text-amber-700">
-              <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
+            <div className="w-px h-4 bg-amber-200 dark:bg-amber-700/50" />
+            <div className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-300">
+              <Heart className="w-4 h-4 text-rose-400 dark:text-rose-300 fill-rose-400 dark:fill-rose-300" />
               <span className="font-semibold">{totalLikes}</span>
-              <span className="text-amber-600/60">总点赞</span>
+              <span className="text-amber-600/60 dark:text-amber-400/60">总点赞</span>
             </div>
           </div>
 
           {isTie && (
-            <div className="mt-3 text-center text-xs text-amber-500/70">
+            <div className="mt-3 text-center text-xs text-amber-500/70 dark:text-amber-400/70">
               🎉 恭喜 {champions.map(c => c.employee.name).join('、')} 并列获得周冠军！
             </div>
           )}
