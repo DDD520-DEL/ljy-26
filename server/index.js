@@ -489,6 +489,190 @@ app.get('/api/stats/monthly-summary', (req, res) => {
   });
 });
 
+function calculateHeatScore(data, year, month, employeeId) {
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  const monthStart = new Date(year, month, 1).getTime();
+  const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
+
+  const empRecords = data.records.filter(r => {
+    const t = new Date(r.timestamp).getTime();
+    return r.employeeId === employeeId && t >= monthStart && t <= monthEnd;
+  });
+
+  const recordIds = new Set(empRecords.map(r => r.id));
+  const empComments = (data.comments || []).filter(c => {
+    const t = new Date(c.timestamp).getTime();
+    return recordIds.has(c.recordId) && t >= monthStart && t <= monthEnd;
+  });
+
+  let totalScore = 0;
+  let recentRecords = 0;
+  let recentLikes = 0;
+  let recentComments = 0;
+
+  empRecords.forEach(r => {
+    const t = new Date(r.timestamp).getTime();
+    const isRecent = (now - t) <= SEVEN_DAYS_MS;
+    const multiplier = isRecent ? 1.5 : 1;
+    totalScore += 10 * multiplier;
+    totalScore += (r.likes || 0) * 3 * multiplier;
+    if (isRecent) {
+      recentRecords++;
+      recentLikes += (r.likes || 0);
+    }
+  });
+
+  empComments.forEach(c => {
+    const t = new Date(c.timestamp).getTime();
+    const isRecent = (now - t) <= SEVEN_DAYS_MS;
+    const multiplier = isRecent ? 1.5 : 1;
+    totalScore += 2 * multiplier;
+    if (isRecent) recentComments++;
+  });
+
+  return {
+    heatScore: Math.round(totalScore * 10) / 10,
+    totalRecords: empRecords.length,
+    totalLikes: empRecords.reduce((s, r) => s + (r.likes || 0), 0),
+    totalComments: empComments.length,
+    recentRecords,
+    recentLikes,
+    recentComments,
+  };
+}
+
+app.get('/api/stats/monthly-heat-ranking', (req, res) => {
+  const { year, month } = req.query;
+
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+
+  if (isNaN(y) || isNaN(m) || m < 0 || m > 11) {
+    return res.status(400).json({ error: 'year 和 month 参数无效，month 应为 0-11' });
+  }
+
+  const data = readData();
+
+  const ranking = [];
+  data.employees.forEach(emp => {
+    const heatData = calculateHeatScore(data, y, m, emp.id);
+    if (heatData.totalRecords > 0 || heatData.totalLikes > 0 || heatData.totalComments > 0) {
+      ranking.push({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeAvatar: emp.avatar,
+        department: emp.department,
+        heatScore: heatData.heatScore,
+        records: heatData.totalRecords,
+        likes: heatData.totalLikes,
+        comments: heatData.totalComments,
+        recentRecords: heatData.recentRecords,
+        recentLikes: heatData.recentLikes,
+        recentComments: heatData.recentComments,
+      });
+    }
+  });
+
+  ranking.sort((a, b) => b.heatScore - a.heatScore);
+
+  const monthRecords = data.records.filter(r => {
+    const d = new Date(r.timestamp);
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+
+  const totalHeatScore = ranking.reduce((s, e) => s + e.heatScore, 0);
+  const totalComments = ranking.reduce((s, e) => s + e.comments, 0);
+
+  res.json({
+    year: y,
+    month: m,
+    monthLabel: `${y}年${m + 1}月`,
+    totalRecords: monthRecords.length,
+    totalLikes: monthRecords.reduce((s, r) => s + (r.likes || 0), 0),
+    totalComments,
+    totalHeatScore: Math.round(totalHeatScore * 10) / 10,
+    totalParticipants: ranking.length,
+    top10: ranking.slice(0, 10),
+    fullRanking: ranking,
+  });
+});
+
+app.get('/api/stats/all-time-heat-ranking', (req, res) => {
+  const data = readData();
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  const ranking = [];
+
+  data.employees.forEach(emp => {
+    const empRecords = data.records.filter(r => r.employeeId === emp.id);
+    const recordIds = new Set(empRecords.map(r => r.id));
+    const empComments = (data.comments || []).filter(c => recordIds.has(c.recordId));
+
+    let totalScore = 0;
+    let recentRecords = 0;
+    let recentLikes = 0;
+    let recentComments = 0;
+
+    empRecords.forEach(r => {
+      const t = new Date(r.timestamp).getTime();
+      const isRecent = (now - t) <= SEVEN_DAYS_MS;
+      const multiplier = isRecent ? 1.5 : 1;
+      totalScore += 10 * multiplier;
+      totalScore += (r.likes || 0) * 3 * multiplier;
+      if (isRecent) {
+        recentRecords++;
+        recentLikes += (r.likes || 0);
+      }
+    });
+
+    empComments.forEach(c => {
+      const t = new Date(c.timestamp).getTime();
+      const isRecent = (now - t) <= SEVEN_DAYS_MS;
+      const multiplier = isRecent ? 1.5 : 1;
+      totalScore += 2 * multiplier;
+      if (isRecent) recentComments++;
+    });
+
+    const totalRecords = empRecords.length;
+    const totalLikes = empRecords.reduce((s, r) => s + (r.likes || 0), 0);
+    const totalComments = empComments.length;
+
+    if (totalRecords > 0 || totalLikes > 0 || totalComments > 0) {
+      ranking.push({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeAvatar: emp.avatar,
+        department: emp.department,
+        heatScore: Math.round(totalScore * 10) / 10,
+        records: totalRecords,
+        likes: totalLikes,
+        comments: totalComments,
+        recentRecords,
+        recentLikes,
+        recentComments,
+      });
+    }
+  });
+
+  ranking.sort((a, b) => b.heatScore - a.heatScore);
+
+  const totalHeatScore = ranking.reduce((s, e) => s + e.heatScore, 0);
+  const totalComments = ranking.reduce((s, e) => s + e.comments, 0);
+
+  res.json({
+    totalRecords: data.records.length,
+    totalLikes: data.records.reduce((s, r) => s + (r.likes || 0), 0),
+    totalComments,
+    totalHeatScore: Math.round(totalHeatScore * 10) / 10,
+    totalParticipants: ranking.length,
+    top10: ranking.slice(0, 10),
+    fullRanking: ranking,
+  });
+});
+
 app.post('/api/sync', (req, res) => {
   const {
     employees = [],

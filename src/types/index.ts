@@ -95,6 +95,20 @@ export interface TopRankingEmployee {
   likes: number;
 }
 
+export interface HeatRankingEmployee {
+  employeeId: string;
+  employeeName: string;
+  employeeAvatar: string;
+  department: Department;
+  heatScore: number;
+  records: number;
+  likes: number;
+  comments: number;
+  recentRecords: number;
+  recentLikes: number;
+  recentComments: number;
+}
+
 export interface MonthlySummary {
   year: number;
   month: number;
@@ -103,4 +117,27 @@ export interface MonthlySummary {
   totalLikes: number;
   totalParticipants: number;
   top10: TopRankingEmployee[];
+}
+
+export interface MonthlyHeatRanking {
+  year: number;
+  month: number;
+  monthLabel: string;
+  totalRecords: number;
+  totalLikes: number;
+  totalComments: number;
+  totalHeatScore: number;
+  totalParticipants: number;
+  top10: HeatRankingEmployee[];
+  fullRanking: HeatRankingEmployee[];
+}
+
+export interface AllTimeHeatRanking {
+  totalRecords: number;
+  totalLikes: number;
+  totalComments: number;
+  totalHeatScore: number;
+  totalParticipants: number;
+  top10: HeatRankingEmployee[];
+  fullRanking: HeatRankingEmployee[];
 }

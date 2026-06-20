@@ -1,21 +1,180 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Heart, Users, ChevronDown, BarChart3, Download } from 'lucide-react';
+import { Trophy, Heart, Users, ChevronDown, BarChart3, Download, Flame, Droplets, MessageCircle } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem } from '@/utils';
-import type { Department } from '@/types';
+import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem, getMonthlyHeatRanking, exportHeatToExcel, type HeatExportDataItem } from '@/utils';
+import type { Department, RankingEntry, HeatRankingEmployee } from '@/types';
 import { DEPARTMENTS } from '@/constants';
-import Top3Hero from '@/components/Top3Hero';
 import FloatingButton from '@/components/FloatingButton';
 import MonthlyTrendChart from '@/components/MonthlyTrendChart';
 
+type RankingTab = 'water' | 'heat';
+
+function Top3Water({ ranking }: { ranking: RankingEntry[] }) {
+  const top3 = ranking.slice(0, 3);
+  const hasData = top3.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 text-center shadow-card animate-fade-in-up">
+        <div className="text-6xl mb-4">🪣</div>
+        <h3 className="font-display text-xl text-slate-600 mb-2">本月榜单虚位以待</h3>
+        <p className="text-slate-400 text-sm">还没有换水记录，快去成为第一个换水英雄吧！</p>
+      </div>
+    );
+  }
+
+  const medalConfig = [
+    { rank: 2, label: '亚军', medal: '🥈', borderColor: 'from-gray-200 via-gray-300 to-gray-400', size: 'md', translateY: 'md:translate-y-2' },
+    { rank: 1, label: '冠军', medal: '🥇', borderColor: 'from-yellow-300 via-yellow-400 to-amber-500', size: 'lg', translateY: 'md:-translate-y-6', crown: true },
+    { rank: 3, label: '季军', medal: '🥉', borderColor: 'from-orange-300 via-amber-500 to-orange-700', size: 'md', translateY: 'md:translate-y-4' },
+  ];
+
+  const ordered: Array<{ config: typeof medalConfig[0]; entry: RankingEntry | null }> = [
+    { config: medalConfig[0], entry: top3[1] || null },
+    { config: medalConfig[1], entry: top3[0] || null },
+    { config: medalConfig[2], entry: top3[2] || null },
+  ];
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex items-end justify-center gap-3 md:gap-6">
+        {ordered.map(({ config, entry }, idx) => (
+          <div key={config.rank} className={`flex-1 max-w-xs ${config.translateY} transition-all duration-500`}>
+            {entry ? (
+              <Link to={`/hero/${entry.employee.id}`} className={`relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px] block`}>
+                <div className="bg-white rounded-[22px] p-4 md:p-6 relative group">
+                  {config.crown && <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-3xl md:text-4xl animate-float z-10">👑</div>}
+                  <div className="text-center mb-3">
+                    <div className="text-2xl mb-1">{config.medal}</div>
+                    <div className={`text-xs font-semibold bg-gradient-to-r ${config.borderColor} bg-clip-text text-transparent`}>{config.label}</div>
+                  </div>
+                  <div className={`relative mx-auto ${config.rank === 1 ? 'w-20 h-20 md:w-24 md:h-24' : 'w-16 h-16 md:w-20 md:h-20'} rounded-full overflow-hidden mb-3 bg-water-50 flex items-center justify-center border-4 border-white shadow-lg group-hover:scale-105 transition-transform`}>
+                    <div className={config.rank === 1 ? 'text-5xl md:text-6xl' : 'text-4xl md:text-5xl'}>{entry.employee.avatar}</div>
+                  </div>
+                  <h3 className={`font-display text-center ${config.rank === 1 ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'} text-slate-800 mb-1 truncate group-hover:text-water-600 transition-colors`}>{entry.employee.name}</h3>
+                  <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full ${entry.badge.bgColor} ${entry.badge.color} text-xs font-medium mx-auto`}>
+                    <span>{entry.badge.icon}</span>
+                    <span>{entry.badge.name}</span>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center">
+                        <Droplets className="w-4 h-4 text-water-500 mx-auto mb-1" />
+                        <div className={`font-display ${config.rank === 1 ? 'text-2xl' : 'text-xl'} gradient-text`}>{entry.records}</div>
+                        <div className="text-[10px] text-slate-400">换水次数</div>
+                      </div>
+                      <div className="text-center">
+                        <Heart className="w-4 h-4 text-rose-400 fill-rose-400 mx-auto mb-1" />
+                        <div className={`font-display ${config.rank === 1 ? 'text-2xl' : 'text-xl'} text-rose-500`}>{entry.likes}</div>
+                        <div className="text-[10px] text-slate-400">获得点赞</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-dashed border-slate-200 min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center">
+                <div className="text-4xl mb-2 opacity-30">{config.medal}</div>
+                <div className="text-slate-400 text-sm">虚位以待</div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Top3Heat({ ranking }: { ranking: HeatRankingEmployee[] }) {
+  const top3 = ranking.slice(0, 3);
+  const hasData = top3.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 text-center shadow-card animate-fade-in-up">
+        <div className="text-6xl mb-4">🔥</div>
+        <h3 className="font-display text-xl text-slate-600 mb-2">热度榜虚位以待</h3>
+        <p className="text-slate-400 text-sm">换水、点赞、评论都能累积热度，快来上榜吧！</p>
+      </div>
+    );
+  }
+
+  const medalConfig = [
+    { rank: 2, label: '热度亚军', medal: '🥈', borderColor: 'from-gray-200 via-gray-300 to-gray-400', size: 'md', translateY: 'md:translate-y-2', bgGradient: 'from-orange-400 to-amber-500' },
+    { rank: 1, label: '热度冠军', medal: '🥇', borderColor: 'from-orange-400 via-red-500 to-pink-500', size: 'lg', translateY: 'md:-translate-y-6', crown: true, bgGradient: 'from-red-500 to-orange-500' },
+    { rank: 3, label: '热度季军', medal: '🥉', borderColor: 'from-amber-400 via-orange-500 to-yellow-600', size: 'md', translateY: 'md:translate-y-4', bgGradient: 'from-amber-400 to-orange-500' },
+  ];
+
+  const ordered: Array<{ config: typeof medalConfig[0]; entry: HeatRankingEmployee | null }> = [
+    { config: medalConfig[0], entry: top3[1] || null },
+    { config: medalConfig[1], entry: top3[0] || null },
+    { config: medalConfig[2], entry: top3[2] || null },
+  ];
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex items-end justify-center gap-3 md:gap-6">
+        {ordered.map(({ config, entry }, idx) => (
+          <div key={config.rank} className={`flex-1 max-w-xs ${config.translateY} transition-all duration-500`}>
+            {entry ? (
+              <Link to={`/hero/${entry.employeeId}`} className={`relative bg-white rounded-3xl shadow-card card-hover overflow-hidden border-2 bg-gradient-to-br ${config.borderColor} p-[2px] block`}>
+                <div className="bg-white rounded-[22px] p-4 md:p-6 relative group">
+                  {config.crown && <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-3xl md:text-4xl animate-float z-10">👑</div>}
+                  <div className="text-center mb-3">
+                    <div className="text-2xl mb-1">{config.medal}</div>
+                    <div className={`text-xs font-semibold bg-gradient-to-r ${config.bgGradient} bg-clip-text text-transparent`}>{config.label}</div>
+                  </div>
+                  <div className={`relative mx-auto ${config.rank === 1 ? 'w-20 h-20 md:w-24 md:h-24' : 'w-16 h-16 md:w-20 md:h-20'} rounded-full overflow-hidden mb-3 bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center border-4 border-white shadow-lg group-hover:scale-105 transition-transform`}>
+                    <div className={config.rank === 1 ? 'text-5xl md:text-6xl' : 'text-4xl md:text-5xl'}>{entry.employeeAvatar}</div>
+                  </div>
+                  <h3 className={`font-display text-center ${config.rank === 1 ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'} text-slate-800 mb-1 truncate group-hover:text-orange-600 transition-colors`}>{entry.employeeName}</h3>
+                  <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r ${config.bgGradient} text-white text-xs font-medium mx-auto`}>
+                    <Flame className="w-3 h-3" />
+                    <span>热度 {entry.heatScore}</span>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center">
+                        <Droplets className="w-3.5 h-3.5 text-water-500 mx-auto mb-0.5" />
+                        <div className="font-display text-lg gradient-text">{entry.records}</div>
+                        <div className="text-[9px] text-slate-400">换水</div>
+                      </div>
+                      <div className="text-center">
+                        <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 mx-auto mb-0.5" />
+                        <div className="font-display text-lg text-rose-500">{entry.likes}</div>
+                        <div className="text-[9px] text-slate-400">点赞</div>
+                      </div>
+                      <div className="text-center">
+                        <MessageCircle className="w-3.5 h-3.5 text-amber-500 mx-auto mb-0.5" />
+                        <div className="font-display text-lg text-amber-500">{entry.comments}</div>
+                        <div className="text-[9px] text-slate-400">评论</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 md:p-8 border-2 border-dashed border-slate-200 min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center">
+                <div className="text-4xl mb-2 opacity-30">{config.medal}</div>
+                <div className="text-slate-400 text-sm">虚位以待</div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Ranking() {
-  const { employees, records } = useAppStore();
+  const { employees, records, comments } = useAppStore();
   const availableMonths = useMemo(() => getAvailableMonths(), []);
 
   const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
+  const [activeTab, setActiveTab] = useState<RankingTab>('water');
 
   const filteredEmployees = useMemo(() => {
     if (selectedDept === 'all') return employees;
@@ -28,14 +187,26 @@ export default function Ranking() {
     return records.filter(r => deptIds.has(r.employeeId));
   }, [records, filteredEmployees, selectedDept]);
 
-  const ranking = useMemo(
+  const filteredComments = useMemo(() => {
+    if (selectedDept === 'all') return comments;
+    const deptIds = new Set(filteredEmployees.map(e => e.id));
+    const deptRecordIds = new Set(filteredRecords.map(r => r.id));
+    return comments.filter(c => deptRecordIds.has(c.recordId) && deptIds.has(c.employeeId));
+  }, [comments, filteredEmployees, filteredRecords, selectedDept]);
+
+  const waterRanking = useMemo(
     () => getMonthlyRanking(filteredRecords, filteredEmployees, selectedMonth.year, selectedMonth.month),
     [filteredRecords, filteredEmployees, selectedMonth]
   );
 
-  const maxRecords = ranking[0]?.records || 1;
+  const heatRanking = useMemo(
+    () => getMonthlyHeatRanking(filteredRecords, filteredEmployees, filteredComments, selectedMonth.year, selectedMonth.month),
+    [filteredRecords, filteredEmployees, filteredComments, selectedMonth]
+  );
 
-  const monthStats = useMemo(() => {
+  const currentRanking = activeTab === 'water' ? waterRanking : heatRanking;
+
+  const waterStats = useMemo(() => {
     const monthRecords = filteredRecords.filter(r => {
       const d = new Date(r.timestamp);
       return d.getFullYear() === selectedMonth.year && d.getMonth() === selectedMonth.month;
@@ -44,27 +215,56 @@ export default function Ranking() {
     return {
       records: monthRecords.length,
       likes: totalLikes,
-      people: ranking.length,
+      people: waterRanking.length,
     };
-  }, [filteredRecords, ranking, selectedMonth]);
+  }, [filteredRecords, waterRanking, selectedMonth]);
+
+  const heatStats = useMemo(() => {
+    const totalHeat = heatRanking.reduce((sum, e) => sum + e.heatScore, 0);
+    const totalComments = heatRanking.reduce((sum, e) => sum + e.comments, 0);
+    const totalRecords = heatRanking.reduce((sum, e) => sum + e.records, 0);
+    return {
+      totalHeat: Math.round(totalHeat * 10) / 10,
+      totalComments,
+      totalRecords,
+      people: heatRanking.length,
+    };
+  }, [heatRanking]);
+
+  const maxRecords = waterRanking[0]?.records || 1;
+  const maxHeat = heatRanking[0]?.heatScore || 1;
 
   const rankBadges = ['🥇', '🥈', '🥉'];
 
-  const handleExport = () => {
-    const exportData: ExportDataItem[] = ranking.map((entry, idx) => ({
+  const handleWaterExport = () => {
+    const exportData: ExportDataItem[] = waterRanking.map((entry, idx) => ({
       rank: idx + 1,
       name: entry.employee.name,
       records: entry.records,
       likes: entry.likes,
       badge: entry.badge.name,
     }));
-
     const dateStr = formatDateForFilename(new Date());
     const monthLabel = formatMonthLabel(selectedMonth.year, selectedMonth.month).replace(/年|月/g, '');
-    const filename = `月度排行榜_${monthLabel}_${dateStr}`;
+    const filename = `月度换水榜_${monthLabel}_${dateStr}`;
     const sheetName = formatMonthLabel(selectedMonth.year, selectedMonth.month);
-
     exportToExcel(exportData, sheetName, filename);
+  };
+
+  const handleHeatExport = () => {
+    const exportData: HeatExportDataItem[] = heatRanking.map((entry, idx) => ({
+      rank: idx + 1,
+      name: entry.employeeName,
+      heatScore: entry.heatScore,
+      records: entry.records,
+      likes: entry.likes,
+      comments: entry.comments,
+    }));
+    const dateStr = formatDateForFilename(new Date());
+    const monthLabel = formatMonthLabel(selectedMonth.year, selectedMonth.month).replace(/年|月/g, '');
+    const filename = `月度热度榜_${monthLabel}_${dateStr}`;
+    const sheetName = formatMonthLabel(selectedMonth.year, selectedMonth.month);
+    exportHeatToExcel(exportData, sheetName, filename);
   };
 
   return (
@@ -83,9 +283,9 @@ export default function Ranking() {
 
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={handleExport}
-              disabled={ranking.length === 0}
-              className="flex items-center gap-2 px-4 py-2.5 bg-water-500 text-white rounded-xl shadow-card hover:bg-water-600 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={activeTab === 'water' ? handleWaterExport : handleHeatExport}
+              disabled={currentRanking.length === 0}
+              className={`flex items-center gap-2 px-4 py-2.5 text-white rounded-xl shadow-card hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${activeTab === 'water' ? 'bg-water-500 hover:bg-water-600' : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'}`}
             >
               <Download className="w-4 h-4" />
               <span className="font-semibold text-sm">导出</span>
@@ -123,7 +323,32 @@ export default function Ranking() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mb-4 inline-flex p-1 bg-white rounded-xl shadow-card border border-water-50">
+          <button
+            onClick={() => setActiveTab('water')}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'water'
+                ? 'bg-water-500 text-white shadow-md scale-105'
+                : 'text-slate-600 hover:text-water-600 hover:bg-water-50'
+            }`}
+          >
+            <Droplets className="w-4 h-4" />
+            <span>换水榜</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('heat')}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'heat'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md scale-105'
+                : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50'
+            }`}
+          >
+            <Flame className="w-4 h-4" />
+            <span>热度榜</span>
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setSelectedDept('all')}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -150,38 +375,90 @@ export default function Ranking() {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-3 md:gap-4">
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="w-4 h-4 text-water-500" />
-              <span className="text-xs text-slate-400">换水总数</span>
+        {activeTab === 'water' ? (
+          <div className="grid grid-cols-3 gap-3 md:gap-4">
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-water-500" />
+                <span className="text-xs text-slate-400">换水总数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl gradient-text">{waterStats.records}</div>
             </div>
-            <div className="font-display text-2xl md:text-3xl gradient-text">{monthStats.records}</div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-purple-500" />
-              <span className="text-xs text-slate-400">参与人数</span>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-slate-400">参与人数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl text-purple-500">{waterStats.people}</div>
             </div>
-            <div className="font-display text-2xl md:text-3xl text-purple-500">{monthStats.people}</div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-              <span className="text-xs text-slate-400">总点赞数</span>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                <span className="text-xs text-slate-400">总点赞数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl text-rose-500">{waterStats.likes}</div>
             </div>
-            <div className="font-display text-2xl md:text-3xl text-rose-500">{monthStats.likes}</div>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-orange-50/50 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-xs text-slate-400">总热度分</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">{heatStats.totalHeat}</div>
+            </div>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-water-50/50 animate-fade-in-up" style={{ animationDelay: '0.12s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Droplets className="w-4 h-4 text-water-500" />
+                <span className="text-xs text-slate-400">换水总数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl gradient-text">{heatStats.totalRecords}</div>
+            </div>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-amber-50/50 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="w-4 h-4 text-amber-500" />
+                <span className="text-xs text-slate-400">评论总数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl text-amber-500">{heatStats.totalComments}</div>
+            </div>
+            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-purple-50/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-slate-400">参与人数</span>
+              </div>
+              <div className="font-display text-2xl md:text-3xl text-purple-500">{heatStats.people}</div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {ranking.length > 0 && (
+      {activeTab === 'heat' && (
+        <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 rounded-2xl p-4 md:p-5 border border-orange-100 animate-fade-in-up">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shrink-0">
+              <Flame className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-display text-base md:text-lg text-slate-800 mb-1">🔥 热度分规则说明</h3>
+              <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
+                换水 <span className="font-semibold text-water-600">+10分</span> · 
+                点赞 <span className="font-semibold text-rose-500">+3分</span> · 
+                评论 <span className="font-semibold text-amber-600">+2分</span> · 
+                <span className="font-semibold text-orange-600">近7天内记录加权1.5倍</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentRanking.length > 0 && (
         <section className="animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
           <h2 className="font-display text-xl md:text-2xl text-slate-800 mb-6 flex items-center gap-2">
-            <span>🏆</span>
-            <span>三甲英雄</span>
+            <span>{activeTab === 'water' ? '🏆' : '🔥'}</span>
+            <span>{activeTab === 'water' ? '三甲英雄' : '热度三甲'}</span>
           </h2>
-          <Top3Hero ranking={ranking} />
+          {activeTab === 'water' ? <Top3Water ranking={waterRanking} /> : <Top3Heat ranking={heatRanking} />}
         </section>
       )}
 
@@ -191,13 +468,13 @@ export default function Ranking() {
           <span>完整排名</span>
         </h2>
 
-        {ranking.length <= 3 ? (
+        {currentRanking.length === 0 ? (
           <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-10 text-center">
-            <div className="text-5xl mb-3">🏅</div>
-            <h3 className="font-display text-lg text-slate-600 mb-1">暂无更多排名数据</h3>
+            <div className="text-5xl mb-3">{activeTab === 'water' ? '🏅' : '🔥'}</div>
+            <h3 className="font-display text-lg text-slate-600 mb-1">暂无{activeTab === 'water' ? '换水' : '热度'}排名数据</h3>
             <p className="text-sm text-slate-400">更多换水记录可以解锁更丰富的排名哦！</p>
           </div>
-        ) : (
+        ) : activeTab === 'water' ? (
           <div className="bg-white rounded-3xl shadow-card border border-water-50/50 overflow-hidden">
             <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-water-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               <div className="col-span-1">排名</div>
@@ -205,27 +482,20 @@ export default function Ranking() {
               <div className="col-span-4 text-center">换水次数</div>
               <div className="col-span-3 text-right">获得点赞</div>
             </div>
-
             <div className="divide-y divide-slate-100">
-              {ranking.map((entry, idx) => {
+              {waterRanking.map((entry, idx) => {
                 const progress = (entry.records / maxRecords) * 100;
                 return (
                   <Link
                     key={entry.employee.id}
                     to={`/hero/${entry.employee.id}`}
                     className="group grid grid-cols-12 gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 hover:bg-water-50/30 transition-colors items-center"
-                    style={{ animationDelay: `${idx * 0.05}s` }}
                   >
                     <div className="col-span-2 md:col-span-1">
-                      <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-display text-lg ${
-                        idx < 3
-                          ? 'bg-gradient-to-br from-yellow-100 to-amber-100'
-                          : 'bg-slate-100'
-                      }`}>
+                      <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-display text-lg ${idx < 3 ? 'bg-gradient-to-br from-yellow-100 to-amber-100' : 'bg-slate-100'}`}>
                         {idx < 3 ? rankBadges[idx] : <span className="text-slate-500">{idx + 1}</span>}
                       </div>
                     </div>
-
                     <div className="col-span-10 md:col-span-4 flex items-center gap-3">
                       <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-water-50 flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
                         {entry.employee.avatar}
@@ -240,7 +510,6 @@ export default function Ranking() {
                         </div>
                       </div>
                     </div>
-
                     <div className="col-span-7 md:col-span-4">
                       <div className="md:hidden flex items-center justify-between mb-1.5">
                         <span className="text-xs text-slate-400">🪣 换水</span>
@@ -248,26 +517,89 @@ export default function Ranking() {
                       </div>
                       <div className="hidden md:flex items-center gap-3">
                         <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-water-gradient rounded-full transition-all duration-700 ease-out"
-                            style={{ width: `${progress}%` }}
-                          />
+                          <div className="h-full bg-water-gradient rounded-full transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
                         </div>
                         <span className="font-display text-xl gradient-text min-w-[2.5rem] text-right">{entry.records}</span>
                       </div>
                       <div className="md:hidden h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-water-gradient rounded-full"
-                          style={{ width: `${progress}%` }}
-                        />
+                        <div className="h-full bg-water-gradient rounded-full" style={{ width: `${progress}%` }} />
                       </div>
                     </div>
-
                     <div className="col-span-5 md:col-span-3 flex items-center justify-end gap-1.5 md:gap-2">
                       <Heart className={`w-4 h-4 md:w-5 md:h-5 ${idx < 3 ? 'text-rose-500 fill-rose-500' : 'text-rose-400'}`} />
-                      <span className={`font-display ${idx < 3 ? 'text-xl text-rose-500' : 'text-lg text-rose-400'}`}>
-                        {entry.likes}
-                      </span>
+                      <span className={`font-display ${idx < 3 ? 'text-xl text-rose-500' : 'text-lg text-rose-400'}`}>{entry.likes}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-card border border-orange-50/50 overflow-hidden">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-gradient-to-r from-orange-50 to-red-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <div className="col-span-1">排名</div>
+              <div className="col-span-3">热度英雄</div>
+              <div className="col-span-2 text-center">🔥 热度分</div>
+              <div className="col-span-2 text-center">🪣 换水</div>
+              <div className="col-span-2 text-center">❤️ 点赞</div>
+              <div className="col-span-2 text-right">💬 评论</div>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {heatRanking.map((entry, idx) => {
+                const progress = (entry.heatScore / maxHeat) * 100;
+                return (
+                  <Link
+                    key={entry.employeeId}
+                    to={`/hero/${entry.employeeId}`}
+                    className="group grid grid-cols-12 gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 hover:bg-orange-50/30 transition-colors items-center"
+                  >
+                    <div className="col-span-2 md:col-span-1">
+                      <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-display text-lg ${idx < 3 ? 'bg-gradient-to-br from-orange-100 to-amber-100' : 'bg-slate-100'}`}>
+                        {idx < 3 ? rankBadges[idx] : <span className="text-slate-500">{idx + 1}</span>}
+                      </div>
+                    </div>
+                    <div className="col-span-10 md:col-span-3 flex items-center gap-3">
+                      <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center text-2xl md:text-3xl shrink-0 group-hover:scale-110 transition-transform">
+                        {entry.employeeAvatar}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-800 truncate group-hover:text-orange-600 transition-colors">{entry.employeeName}</div>
+                        <div className="md:hidden flex items-center gap-2 mt-1">
+                          {entry.recentRecords > 0 || entry.recentLikes > 0 || entry.recentComments > 0 ? (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-600">
+                              <Flame className="w-3 h-3" />
+                              近期活跃
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-span-12 md:col-span-2 order-last md:order-none">
+                      <div className="hidden md:block">
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-1">
+                          <div className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
+                        </div>
+                        <div className="text-center font-display text-xl bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">{entry.heatScore}</div>
+                      </div>
+                      <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-orange-50 to-red-50 rounded-lg px-3 py-2">
+                        <span className="text-xs text-slate-500 flex items-center gap-1"><Flame className="w-3 h-3 text-orange-500" />热度分</span>
+                        <span className="font-display text-lg bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent font-semibold">{entry.heatScore}</span>
+                      </div>
+                    </div>
+                    <div className="col-span-4 md:col-span-2 flex md:justify-center items-center gap-1.5 md:gap-2">
+                      <Droplets className="w-4 h-4 text-water-500" />
+                      <span className="font-display text-lg text-water-600">{entry.records}</span>
+                      {entry.recentRecords > 0 && <span className="text-[10px] font-semibold text-orange-500 bg-orange-100 px-1.5 py-0.5 rounded-full">+{entry.recentRecords}</span>}
+                    </div>
+                    <div className="col-span-4 md:col-span-2 flex md:justify-center items-center gap-1.5 md:gap-2">
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span className="font-display text-lg text-rose-500">{entry.likes}</span>
+                      {entry.recentLikes > 0 && <span className="text-[10px] font-semibold text-orange-500 bg-orange-100 px-1.5 py-0.5 rounded-full">+{entry.recentLikes}</span>}
+                    </div>
+                    <div className="col-span-4 md:col-span-2 flex md:justify-end items-center justify-end gap-1.5 md:gap-2">
+                      <MessageCircle className="w-4 h-4 text-amber-500" />
+                      <span className="font-display text-lg text-amber-500">{entry.comments}</span>
+                      {entry.recentComments > 0 && <span className="text-[10px] font-semibold text-orange-500 bg-orange-100 px-1.5 py-0.5 rounded-full">+{entry.recentComments}</span>}
                     </div>
                   </Link>
                 );
@@ -277,9 +609,11 @@ export default function Ranking() {
         )}
       </section>
 
-      <section className="animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
-        <MonthlyTrendChart year={selectedMonth.year} month={selectedMonth.month} />
-      </section>
+      {activeTab === 'water' && (
+        <section className="animate-fade-in-up" style={{ animationDelay: '0.35s' }}>
+          <MonthlyTrendChart year={selectedMonth.year} month={selectedMonth.month} />
+        </section>
+      )}
 
       <FloatingButton />
     </div>

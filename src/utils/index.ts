@@ -1,4 +1,4 @@
-import type { WaterRecord, Employee, RankingEntry, BadgeConfig, Department, DepartmentConfig, Comment } from '@/types';
+import type { WaterRecord, Employee, RankingEntry, BadgeConfig, Department, DepartmentConfig, Comment, HeatRankingEmployee } from '@/types';
 import { BADGE_LEVELS, DEPARTMENTS, ENCOURAGE_MESSAGES } from '@/constants';
 
 export function generateId(): string {
@@ -449,6 +449,197 @@ export function exportToExcel(data: ExportDataItem[], sheetName: string, filenam
       { wch: 12 },
       { wch: 10 },
       { wch: 15 },
+    ];
+    worksheet['!cols'] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+  });
+}
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const RECORD_SCORE = 10;
+const LIKE_SCORE = 3;
+const COMMENT_SCORE = 2;
+const RECENT_MULTIPLIER = 1.5;
+
+export function isRecent(timestamp: string, now: number = Date.now()): boolean {
+  return (now - new Date(timestamp).getTime()) <= SEVEN_DAYS_MS;
+}
+
+export function calculateEmployeeHeatScore(
+  employeeId: string,
+  records: WaterRecord[],
+  comments: Comment[],
+  scope: 'all' | { year: number; month: number } = 'all'
+): {
+  heatScore: number;
+  records: number;
+  likes: number;
+  comments: number;
+  recentRecords: number;
+  recentLikes: number;
+  recentComments: number;
+} {
+  const now = Date.now();
+
+  let empRecords = records.filter(r => r.employeeId === employeeId);
+  if (scope !== 'all') {
+    empRecords = empRecords.filter(r => {
+      const d = new Date(r.timestamp);
+      return d.getFullYear() === scope.year && d.getMonth() === scope.month;
+    });
+  }
+
+  const recordIds = new Set(empRecords.map(r => r.id));
+  let empComments = comments.filter(c => recordIds.has(c.recordId));
+  if (scope !== 'all') {
+    empComments = empComments.filter(c => {
+      const d = new Date(c.timestamp);
+      return d.getFullYear() === scope.year && d.getMonth() === scope.month;
+    });
+  }
+
+  let totalScore = 0;
+  let recentRecords = 0;
+  let recentLikes = 0;
+  let recentComments = 0;
+
+  empRecords.forEach(r => {
+    const isRecentRecord = isRecent(r.timestamp, now);
+    const multiplier = isRecentRecord ? RECENT_MULTIPLIER : 1;
+    totalScore += RECORD_SCORE * multiplier;
+    totalScore += (r.likes || 0) * LIKE_SCORE * multiplier;
+    if (isRecentRecord) {
+      recentRecords++;
+      recentLikes += (r.likes || 0);
+    }
+  });
+
+  empComments.forEach(c => {
+    const isRecentComment = isRecent(c.timestamp, now);
+    const multiplier = isRecentComment ? RECENT_MULTIPLIER : 1;
+    totalScore += COMMENT_SCORE * multiplier;
+    if (isRecentComment) recentComments++;
+  });
+
+  return {
+    heatScore: Math.round(totalScore * 10) / 10,
+    records: empRecords.length,
+    likes: empRecords.reduce((s, r) => s + (r.likes || 0), 0),
+    comments: empComments.length,
+    recentRecords,
+    recentLikes,
+    recentComments,
+  };
+}
+
+export function getMonthlyHeatRanking(
+  records: WaterRecord[],
+  employees: Employee[],
+  comments: Comment[],
+  year: number,
+  month: number,
+  department?: Department
+): HeatRankingEmployee[] {
+  const deptEmployees = department
+    ? employees.filter(e => e.department === department)
+    : employees;
+
+  const ranking: HeatRankingEmployee[] = [];
+
+  deptEmployees.forEach(emp => {
+    const heatData = calculateEmployeeHeatScore(emp.id, records, comments, { year, month });
+    if (heatData.records > 0 || heatData.likes > 0 || heatData.comments > 0) {
+      ranking.push({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeAvatar: emp.avatar,
+        department: emp.department,
+        heatScore: heatData.heatScore,
+        records: heatData.records,
+        likes: heatData.likes,
+        comments: heatData.comments,
+        recentRecords: heatData.recentRecords,
+        recentLikes: heatData.recentLikes,
+        recentComments: heatData.recentComments,
+      });
+    }
+  });
+
+  ranking.sort((a, b) => b.heatScore - a.heatScore);
+  return ranking;
+}
+
+export function getAllTimeHeatRanking(
+  records: WaterRecord[],
+  employees: Employee[],
+  comments: Comment[],
+  department?: Department
+): HeatRankingEmployee[] {
+  const deptEmployees = department
+    ? employees.filter(e => e.department === department)
+    : employees;
+
+  const ranking: HeatRankingEmployee[] = [];
+
+  deptEmployees.forEach(emp => {
+    const heatData = calculateEmployeeHeatScore(emp.id, records, comments, 'all');
+    if (heatData.records > 0 || heatData.likes > 0 || heatData.comments > 0) {
+      ranking.push({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        employeeAvatar: emp.avatar,
+        department: emp.department,
+        heatScore: heatData.heatScore,
+        records: heatData.records,
+        likes: heatData.likes,
+        comments: heatData.comments,
+        recentRecords: heatData.recentRecords,
+        recentLikes: heatData.recentLikes,
+        recentComments: heatData.recentComments,
+      });
+    }
+  });
+
+  ranking.sort((a, b) => b.heatScore - a.heatScore);
+  return ranking;
+}
+
+export interface HeatExportDataItem {
+  rank: number;
+  name: string;
+  heatScore: number;
+  records: number;
+  likes: number;
+  comments: number;
+}
+
+export function exportHeatToExcel(data: HeatExportDataItem[], sheetName: string, filename: string): void {
+  import('xlsx').then((XLSX) => {
+    const worksheetData = [
+      ['排名', '姓名', '热度分', '换水次数', '点赞数', '评论数'],
+      ...data.map(item => [
+        item.rank,
+        item.name,
+        item.heatScore,
+        item.records,
+        item.likes,
+        item.comments,
+      ]),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    const colWidths = [
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 10 },
     ];
     worksheet['!cols'] = colWidths;
 
