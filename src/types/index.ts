@@ -141,3 +141,13 @@ export interface AllTimeHeatRanking {
   top10: HeatRankingEmployee[];
   fullRanking: HeatRankingEmployee[];
 }
+
+export type MessageCategory = 'encourage' | 'complaint' | 'other';
+
+export interface AnonymousMessage {
+  id: string;
+  content: string;
+  category: MessageCategory;
+  timestamp: string;
+  likes: number;
+}

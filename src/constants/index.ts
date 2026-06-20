@@ -55,3 +55,33 @@ export const DEFAULT_REMINDER_CONFIG: ReminderConfig = {
   title: '换水提醒',
   message: '饮水机水位如何？需要换水的话，快来打卡吧！',
 };
+
+export const MESSAGE_CATEGORIES = [
+  { id: 'encourage' as const, label: '加油鼓励', icon: '💪', color: 'text-green-600', bgColor: 'bg-green-100' },
+  { id: 'complaint' as const, label: '吐槽抱怨', icon: '😤', color: 'text-rose-600', bgColor: 'bg-rose-100' },
+  { id: 'other' as const, label: '其他', icon: '💬', color: 'text-slate-600', bgColor: 'bg-slate-100' },
+];
+
+export const ANONYMOUS_ENCOURAGE_TEMPLATES = [
+  '感谢今天换水的同事，辛苦了！',
+  '今天又喝到了凉凉的水，太感谢了！',
+  '给换水的英雄点赞👍',
+  '默默换水的同事最帅/最美！',
+  '下次让我来！感谢你的付出',
+  '水甜甜的，心暖暖的❤️',
+];
+
+export const ANONYMOUS_COMPLAINT_TEMPLATES = [
+  '桶装水空了三天了，没人看到吗？',
+  '每次都是我换水，其他人看不到吗？',
+  '饮水机没水了，有人管管吗？',
+  '能不能喝完水就换一桶啊！',
+  '真的很无奈，永远都是那几个人在换',
+];
+
+export const ANONYMOUS_OTHER_TEMPLATES = [
+  '饮水机该清洁一下了',
+  '建议买个饮水机支架，换水更方便',
+  '有没有人想一起团购桶装水？',
+  '建议在饮水机旁贴个换水记录表',
+];

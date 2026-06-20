@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Employee, WaterRecord, BucketType, Department, Comment, ReminderConfig } from '@/types';
-import { INITIAL_EMPLOYEES, STORAGE_KEY, DEFAULT_REMINDER_CONFIG } from '@/constants';
+import type { Employee, WaterRecord, BucketType, Department, Comment, ReminderConfig, AnonymousMessage, MessageCategory } from '@/types';
+import { INITIAL_EMPLOYEES, STORAGE_KEY, DEFAULT_REMINDER_CONFIG, ANONYMOUS_ENCOURAGE_TEMPLATES, ANONYMOUS_COMPLAINT_TEMPLATES, ANONYMOUS_OTHER_TEMPLATES } from '@/constants';
 import { generateId, generateMockRecords, generateMockComments } from '@/utils';
 import { syncManager, type SyncState } from '@/api/syncManager';
 import { api, isServerReachable } from '@/api';
@@ -12,6 +12,8 @@ interface PersistedStateRaw {
   comments: Comment[];
   currentCommenterId: string | null;
   reminderConfig: ReminderConfig;
+  anonymousMessages: AnonymousMessage[];
+  likedAnonymousMessageIds: string[];
 }
 
 interface PersistedState {
@@ -21,6 +23,8 @@ interface PersistedState {
   comments: Comment[];
   currentCommenterId: string | null;
   reminderConfig: ReminderConfig;
+  anonymousMessages: AnonymousMessage[];
+  likedAnonymousMessages: Set<string>;
 }
 
 interface AppState extends PersistedState {
@@ -37,6 +41,9 @@ interface AppState extends PersistedState {
   getCommentsByRecord: (recordId: string) => Comment[];
   setCurrentCommenter: (employeeId: string) => void;
   updateReminderConfig: (config: ReminderConfig) => void;
+  addAnonymousMessage: (content: string, category: MessageCategory) => AnonymousMessage;
+  likeAnonymousMessage: (messageId: string) => void;
+  isAnonymousMessageLiked: (messageId: string) => boolean;
 
   initialize: () => Promise<void>;
   refreshFromServer: () => Promise<void>;
@@ -53,6 +60,8 @@ function serializeState(state: PersistedState): PersistedStateRaw {
     comments: state.comments,
     currentCommenterId: state.currentCommenterId,
     reminderConfig: state.reminderConfig,
+    anonymousMessages: state.anonymousMessages,
+    likedAnonymousMessageIds: Array.from(state.likedAnonymousMessages),
   };
 }
 
@@ -64,6 +73,8 @@ function deserializeState(raw: PersistedStateRaw): PersistedState {
     comments: raw.comments || [],
     currentCommenterId: raw.currentCommenterId || null,
     reminderConfig: raw.reminderConfig || { ...DEFAULT_REMINDER_CONFIG },
+    anonymousMessages: raw.anonymousMessages || [],
+    likedAnonymousMessages: new Set(raw.likedAnonymousMessageIds || []),
   };
 }
 
@@ -86,6 +97,33 @@ function saveToStorage(state: PersistedState): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState(state)));
   } catch {
   }
+}
+
+function generateMockAnonymousMessages(): AnonymousMessage[] {
+  const messages: AnonymousMessage[] = [];
+  const now = Date.now();
+  const allTemplates = [
+    ...ANONYMOUS_ENCOURAGE_TEMPLATES.map(t => ({ content: t, category: 'encourage' as const })),
+    ...ANONYMOUS_COMPLAINT_TEMPLATES.map(t => ({ content: t, category: 'complaint' as const })),
+    ...ANONYMOUS_OTHER_TEMPLATES.map(t => ({ content: t, category: 'other' as const })),
+  ];
+
+  for (let i = 0; i < 10; i++) {
+    const template = allTemplates[Math.floor(Math.random() * allTemplates.length)];
+    const hoursAgo = Math.floor(Math.random() * 24 * 7);
+    const timestamp = new Date(now - hoursAgo * 3600000).toISOString();
+
+    messages.push({
+      id: generateId(),
+      content: template.content,
+      category: template.category,
+      timestamp,
+      likes: Math.floor(Math.random() * 10),
+    });
+  }
+
+  messages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return messages;
 }
 
 function deduplicateLocalState(state: PersistedState): PersistedState {
@@ -117,11 +155,24 @@ function deduplicateLocalState(state: PersistedState): PersistedState {
     uniqueComments.push(c);
   }
 
+  const seenMessageIds = new Set<string>();
+  const seenMessageFps = new Set<string>();
+  const uniqueMessages: AnonymousMessage[] = [];
+  for (const m of state.anonymousMessages) {
+    if (seenMessageIds.has(m.id)) continue;
+    const fp = `${m.content}-${m.category}-${m.timestamp}`;
+    if (seenMessageFps.has(fp)) continue;
+    seenMessageIds.add(m.id);
+    seenMessageFps.add(fp);
+    uniqueMessages.push(m);
+  }
+
   return {
     ...state,
     employees: uniqueEmployees,
     records: uniqueRecords,
     comments: uniqueComments,
+    anonymousMessages: uniqueMessages,
   };
 }
 
@@ -132,7 +183,8 @@ function getInitialLocalState(): PersistedState {
     const changed =
       deduped.records.length !== saved.records.length ||
       deduped.comments.length !== saved.comments.length ||
-      deduped.employees.length !== saved.employees.length;
+      deduped.employees.length !== saved.employees.length ||
+      deduped.anonymousMessages.length !== saved.anonymousMessages.length;
     if (changed) saveToStorage(deduped);
     return deduped;
   }
@@ -140,6 +192,7 @@ function getInitialLocalState(): PersistedState {
   const employees = [...INITIAL_EMPLOYEES];
   const records = generateMockRecords(employees);
   const comments = generateMockComments(employees, records);
+  const anonymousMessages = generateMockAnonymousMessages();
   const initial: PersistedState = {
     employees,
     records,
@@ -147,6 +200,8 @@ function getInitialLocalState(): PersistedState {
     comments,
     currentCommenterId: employees[0]?.id || null,
     reminderConfig: { ...DEFAULT_REMINDER_CONFIG },
+    anonymousMessages,
+    likedAnonymousMessages: new Set<string>(),
   };
   saveToStorage(initial);
   return initial;
@@ -158,7 +213,9 @@ function mergeServerIntoLocal(
   serverRecords: WaterRecord[],
   serverLikedIds: string[],
   serverComments: Comment[],
-  serverReminderConfig?: ReminderConfig
+  serverReminderConfig?: ReminderConfig,
+  serverAnonymousMessages: AnonymousMessage[] = [],
+  serverLikedAnonymousMessageIds: string[] = []
 ): PersistedState {
   const localEmpMap = new Map(local.employees.map(e => [e.id, { ...e }]));
   serverEmployees.forEach(emp => {
@@ -232,6 +289,44 @@ function mergeServerIntoLocal(
   });
   const mergedComments = Array.from(localCommentsById.values());
 
+  function getMessageFingerprint(m: AnonymousMessage): string {
+    return `${m.content}-${m.category}-${m.timestamp}`;
+  }
+
+  const localMessagesById = new Map(local.anonymousMessages.map(m => [m.id, { ...m }]));
+  const localMessagesByFp = new Map<string, string>();
+  local.anonymousMessages.forEach(m => {
+    localMessagesByFp.set(getMessageFingerprint(m), m.id);
+  });
+
+  serverAnonymousMessages.forEach(msg => {
+    if (localMessagesById.has(msg.id)) {
+      const existing = localMessagesById.get(msg.id)!;
+      localMessagesById.set(msg.id, {
+        ...existing,
+        likes: Math.max(existing.likes || 0, msg.likes || 0),
+      });
+    } else {
+      const fp = getMessageFingerprint(msg);
+      const duplicateLocalId = localMessagesByFp.get(fp);
+      if (duplicateLocalId) {
+        const existing = localMessagesById.get(duplicateLocalId)!;
+        localMessagesById.set(duplicateLocalId, {
+          ...existing,
+          likes: Math.max(existing.likes || 0, msg.likes || 0),
+        });
+      } else {
+        localMessagesById.set(msg.id, { ...msg });
+      }
+    }
+  });
+  const mergedMessages = Array.from(localMessagesById.values())
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const mergedLikedAnonymous = new Set<string>();
+  local.likedAnonymousMessages.forEach(id => mergedLikedAnonymous.add(id));
+  serverLikedAnonymousMessageIds.forEach(id => mergedLikedAnonymous.add(id));
+
   return {
     employees: mergedEmployees,
     records: mergedRecords,
@@ -239,6 +334,8 @@ function mergeServerIntoLocal(
     comments: mergedComments,
     currentCommenterId: local.currentCommenterId,
     reminderConfig: serverReminderConfig || local.reminderConfig,
+    anonymousMessages: mergedMessages,
+    likedAnonymousMessages: mergedLikedAnonymous,
   };
 }
 
@@ -325,6 +422,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       comments: state.comments,
       currentCommenterId: state.currentCommenterId,
       reminderConfig: state.reminderConfig,
+      anonymousMessages: state.anonymousMessages,
+      likedAnonymousMessages: state.likedAnonymousMessages,
     };
     saveToStorage(newState);
     set(newState);
@@ -384,6 +483,61 @@ export const useAppStore = create<AppState>((set, get) => ({
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   },
 
+  addAnonymousMessage: (content: string, category: MessageCategory): AnonymousMessage => {
+    const newMessage: AnonymousMessage = {
+      id: generateId(),
+      content: content.trim(),
+      category,
+      timestamp: new Date().toISOString(),
+      likes: 0,
+    };
+
+    set(state => {
+      const anonymousMessages = [newMessage, ...state.anonymousMessages];
+      const newState: PersistedState = { ...state, anonymousMessages };
+      saveToStorage(newState);
+      return newState;
+    });
+
+    syncManager.enqueue('addAnonymousMessage', {
+      id: newMessage.id,
+      content: content.trim(),
+      category,
+      timestamp: newMessage.timestamp,
+    });
+
+    return newMessage;
+  },
+
+  likeAnonymousMessage: (messageId: string): void => {
+    const state = get();
+    if (state.likedAnonymousMessages.has(messageId)) return;
+
+    const anonymousMessages = state.anonymousMessages.map(m => {
+      if (m.id === messageId) {
+        return { ...m, likes: m.likes + 1 };
+      }
+      return m;
+    });
+
+    const likedAnonymousMessages = new Set(state.likedAnonymousMessages);
+    likedAnonymousMessages.add(messageId);
+
+    const newState: PersistedState = {
+      ...state,
+      anonymousMessages,
+      likedAnonymousMessages,
+    };
+    saveToStorage(newState);
+    set(newState);
+
+    syncManager.enqueue('likeAnonymousMessage', { id: messageId });
+  },
+
+  isAnonymousMessageLiked: (messageId: string): boolean => {
+    return get().likedAnonymousMessages.has(messageId);
+  },
+
   initialize: async (): Promise<void> => {
     set({ isInitializing: true, initError: null });
 
@@ -403,7 +557,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           cached.records,
           cached.likedRecordIds,
           cached.comments,
-          cached.reminderConfig
+          cached.reminderConfig,
+          cached.anonymousMessages || [],
+          cached.likedAnonymousMessageIds || []
         );
         saveToStorage(merged);
         set({ ...merged, serverLastModified: cached.lastModified });
@@ -424,7 +580,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         serverData.records,
         serverData.likedRecordIds,
         serverData.comments,
-        serverData.reminderConfig
+        serverData.reminderConfig,
+        serverData.anonymousMessages || [],
+        serverData.likedAnonymousMessageIds || []
       );
       saveToStorage(merged);
       syncManager.setCachedServerData(serverData);
@@ -449,7 +607,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           cached.records,
           cached.likedRecordIds,
           cached.comments,
-          cached.reminderConfig
+          cached.reminderConfig,
+          cached.anonymousMessages || [],
+          cached.likedAnonymousMessageIds || []
         );
         saveToStorage(merged);
         set({ ...merged, serverLastModified: cached.lastModified });
@@ -477,7 +637,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         serverData.records,
         serverData.likedRecordIds,
         serverData.comments,
-        serverData.reminderConfig
+        serverData.reminderConfig,
+        serverData.anonymousMessages || [],
+        serverData.likedAnonymousMessageIds || []
       );
       saveToStorage(merged);
       syncManager.setCachedServerData(serverData);
@@ -500,6 +662,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       likedRecordIds: Array.from(state.likedRecords),
       currentCommenterId: state.currentCommenterId,
       reminderConfig: state.reminderConfig,
+      anonymousMessages: state.anonymousMessages,
+      likedAnonymousMessageIds: Array.from(state.likedAnonymousMessages),
     });
 
     if (result) {
@@ -510,7 +674,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         result.records,
         result.likedRecordIds,
         result.comments,
-        result.reminderConfig
+        result.reminderConfig,
+        result.anonymousMessages || [],
+        result.likedAnonymousMessageIds || []
       );
       saveToStorage(merged);
       set({
@@ -533,6 +699,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       comments: [],
       currentCommenterId: null,
       reminderConfig: { ...DEFAULT_REMINDER_CONFIG },
+      anonymousMessages: [],
+      likedAnonymousMessages: new Set<string>(),
     };
     saveToStorage(emptyState);
     set({

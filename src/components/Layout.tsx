@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Droplets, Trophy, Award, Home, Bell, BellOff, Swords } from 'lucide-react';
+import { Droplets, Trophy, Award, Home, Bell, BellOff, Swords, MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import SyncStatusBar from '@/components/SyncStatusBar';
 import ReminderSettings from '@/components/ReminderSettings';
@@ -25,6 +25,7 @@ export default function Layout() {
     { to: '/ranking', label: '排行榜', icon: Trophy },
     { to: '/department-battle', label: '部门对战', icon: Swords },
     { to: '/hall-of-fame', label: '荣誉墙', icon: Award },
+    { to: '/anonymous-wall', label: '留言墙', icon: MessageSquare },
   ];
 
   return (

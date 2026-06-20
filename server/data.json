@@ -348,5 +348,78 @@
     "title": "换水提醒",
     "message": "饮水机水位如何？需要换水的话，快来打卡吧！"
   },
+  "anonymousMessages": [
+    {
+      "id": "msg_encourage_001",
+      "content": "感谢今天换水的同事，辛苦了！",
+      "category": "encourage",
+      "timestamp": "2026-06-19T10:30:00.000Z",
+      "likes": 5
+    },
+    {
+      "id": "msg_encourage_002",
+      "content": "给换水的英雄点赞👍",
+      "category": "encourage",
+      "timestamp": "2026-06-18T15:20:00.000Z",
+      "likes": 8
+    },
+    {
+      "id": "msg_complaint_001",
+      "content": "桶装水空了三天了，没人看到吗？",
+      "category": "complaint",
+      "timestamp": "2026-06-17T09:15:00.000Z",
+      "likes": 3
+    },
+    {
+      "id": "msg_encourage_003",
+      "content": "水甜甜的，心暖暖的❤️",
+      "category": "encourage",
+      "timestamp": "2026-06-16T14:00:00.000Z",
+      "likes": 6
+    },
+    {
+      "id": "msg_complaint_002",
+      "content": "能不能喝完水就换一桶啊！",
+      "category": "complaint",
+      "timestamp": "2026-06-15T11:45:00.000Z",
+      "likes": 4
+    },
+    {
+      "id": "msg_other_001",
+      "content": "饮水机该清洁一下了",
+      "category": "other",
+      "timestamp": "2026-06-14T16:30:00.000Z",
+      "likes": 2
+    },
+    {
+      "id": "msg_encourage_004",
+      "content": "默默换水的同事最帅/最美！",
+      "category": "encourage",
+      "timestamp": "2026-06-13T10:00:00.000Z",
+      "likes": 7
+    },
+    {
+      "id": "msg_complaint_003",
+      "content": "真的很无奈，永远都是那几个人在换",
+      "category": "complaint",
+      "timestamp": "2026-06-12T13:20:00.000Z",
+      "likes": 5
+    },
+    {
+      "id": "msg_other_002",
+      "content": "建议买个饮水机支架，换水更方便",
+      "category": "other",
+      "timestamp": "2026-06-11T09:00:00.000Z",
+      "likes": 3
+    },
+    {
+      "id": "msg_encourage_005",
+      "content": "今天又喝到了凉凉的水，太感谢了！",
+      "category": "encourage",
+      "timestamp": "2026-06-10T15:10:00.000Z",
+      "likes": 9
+    }
+  ],
+  "likedAnonymousMessageIds": [],
   "_lastModified": 1781943123537
 }

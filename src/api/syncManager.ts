@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, AnonymousMessage, MessageCategory } from '@/types';
 import { api, isServerReachable, type ServerData } from '@/api';
 
 export type PendingActionType =
@@ -7,7 +7,9 @@ export type PendingActionType =
   | 'likeRecord'
   | 'addComment'
   | 'updateEmployee'
-  | 'updateReminderConfig';
+  | 'updateReminderConfig'
+  | 'addAnonymousMessage'
+  | 'likeAnonymousMessage';
 
 export interface PendingAction {
   id: string;
@@ -217,6 +219,16 @@ class SyncManager {
           await api.updateReminderConfig(payload);
           return true;
         }
+        case 'addAnonymousMessage': {
+          const payload = action.payload as { id?: string; content: string; category: MessageCategory; timestamp: string; likes?: number };
+          await api.addAnonymousMessage(payload);
+          return true;
+        }
+        case 'likeAnonymousMessage': {
+          const payload = action.payload as { id: string };
+          await api.likeAnonymousMessage(payload.id);
+          return true;
+        }
         default:
           return true;
       }
@@ -277,6 +289,8 @@ class SyncManager {
     likedRecordIds: string[];
     currentCommenterId: string | null;
     reminderConfig?: ReminderConfig;
+    anonymousMessages?: AnonymousMessage[];
+    likedAnonymousMessageIds?: string[];
   }): Promise<ServerData | null> {
     this.updateState({ isSyncing: true });
 
@@ -300,6 +314,8 @@ class SyncManager {
         comments: result.mergedComments,
         currentCommenterId: result.currentCommenterId,
         reminderConfig: result.mergedReminderConfig,
+        anonymousMessages: result.mergedAnonymousMessages || [],
+        likedAnonymousMessageIds: result.mergedLikedAnonymousMessageIds || [],
         lastModified: result.lastModified,
       };
 

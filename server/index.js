@@ -46,6 +46,45 @@ const DEFAULT_EMPLOYEES = [
   { id: '8', name: '周雪', avatar: '👩‍🏫', totalLikes: 0, department: 'admin' },
 ];
 
+function generateMockAnonymousMessages() {
+  const messages = [];
+  const now = Date.now();
+  const templates = [
+    { content: '感谢今天换水的同事，辛苦了！', category: 'encourage' },
+    { content: '今天又喝到了凉凉的水，太感谢了！', category: 'encourage' },
+    { content: '给换水的英雄点赞👍', category: 'encourage' },
+    { content: '默默换水的同事最帅/最美！', category: 'encourage' },
+    { content: '下次让我来！感谢你的付出', category: 'encourage' },
+    { content: '水甜甜的，心暖暖的❤️', category: 'encourage' },
+    { content: '桶装水空了三天了，没人看到吗？', category: 'complaint' },
+    { content: '每次都是我换水，其他人看不到吗？', category: 'complaint' },
+    { content: '饮水机没水了，有人管管吗？', category: 'complaint' },
+    { content: '能不能喝完水就换一桶啊！', category: 'complaint' },
+    { content: '真的很无奈，永远都是那几个人在换', category: 'complaint' },
+    { content: '饮水机该清洁一下了', category: 'other' },
+    { content: '建议买个饮水机支架，换水更方便', category: 'other' },
+    { content: '有没有人想一起团购桶装水？', category: 'other' },
+    { content: '建议在饮水机旁贴个换水记录表', category: 'other' },
+  ];
+
+  for (let i = 0; i < 10; i++) {
+    const template = templates[Math.floor(Math.random() * templates.length)];
+    const hoursAgo = Math.floor(Math.random() * 24 * 7);
+    const timestamp = new Date(now - hoursAgo * 3600000).toISOString();
+
+    messages.push({
+      id: generateId(),
+      content: template.content,
+      category: template.category,
+      timestamp,
+      likes: Math.floor(Math.random() * 10),
+    });
+  }
+
+  messages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return messages;
+}
+
 const DEFAULT_DATA = {
   employees: DEFAULT_EMPLOYEES,
   records: generateMockServerRecords(DEFAULT_EMPLOYEES),
@@ -58,6 +97,8 @@ const DEFAULT_DATA = {
     title: '换水提醒',
     message: '饮水机水位如何？需要换水的话，快来打卡吧！',
   },
+  anonymousMessages: generateMockAnonymousMessages(),
+  likedAnonymousMessageIds: [],
   _lastModified: Date.now(),
 };
 
@@ -110,6 +151,8 @@ app.get('/api/data', (req, res) => {
     comments: data.comments || [],
     currentCommenterId: data.currentCommenterId || null,
     reminderConfig: data.reminderConfig || DEFAULT_DATA.reminderConfig,
+    anonymousMessages: data.anonymousMessages || [],
+    likedAnonymousMessageIds: data.likedAnonymousMessageIds || [],
     lastModified: data._lastModified,
   });
 });
@@ -374,6 +417,80 @@ app.post('/api/comments', (req, res) => {
 
   if (writeData(data)) {
     res.status(201).json(newComment);
+  } else {
+    res.status(500).json({ error: '保存数据失败' });
+  }
+});
+
+app.get('/api/anonymous-messages', (req, res) => {
+  const data = readData();
+  const messages = (data.anonymousMessages || []).sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  res.json(messages);
+});
+
+app.post('/api/anonymous-messages', (req, res) => {
+  const { id, content, category, timestamp, likes } = req.body || {};
+
+  if (!content || !content.trim() || !category) {
+    return res.status(400).json({ error: '缺少必要字段: content, category' });
+  }
+
+  const validCategories = ['encourage', 'complaint', 'other'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ error: 'category 无效，应为 encourage, complaint, other 之一' });
+  }
+
+  const data = readData();
+  data.anonymousMessages = data.anonymousMessages || [];
+
+  if (id) {
+    const existing = data.anonymousMessages.find(m => m.id === id);
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+  }
+
+  const newMessage = {
+    id: id || generateId(),
+    content: content.trim(),
+    category,
+    timestamp: timestamp || new Date().toISOString(),
+    likes: typeof likes === 'number' ? likes : 0,
+  };
+
+  data.anonymousMessages.unshift(newMessage);
+
+  if (writeData(data)) {
+    res.status(201).json(newMessage);
+  } else {
+    res.status(500).json({ error: '保存数据失败' });
+  }
+});
+
+app.post('/api/anonymous-messages/:id/like', (req, res) => {
+  const { id } = req.params;
+
+  const data = readData();
+  data.anonymousMessages = data.anonymousMessages || [];
+  data.likedAnonymousMessageIds = data.likedAnonymousMessageIds || [];
+
+  const message = data.anonymousMessages.find(m => m.id === id);
+
+  if (!message) {
+    return res.status(404).json({ error: '消息不存在' });
+  }
+
+  const alreadyLiked = data.likedAnonymousMessageIds.includes(id);
+
+  if (!alreadyLiked) {
+    message.likes += 1;
+    data.likedAnonymousMessageIds = [...data.likedAnonymousMessageIds, id];
+  }
+
+  if (writeData(data)) {
+    res.json({ message, liked: alreadyLiked });
   } else {
     res.status(500).json({ error: '保存数据失败' });
   }
@@ -681,6 +798,8 @@ app.post('/api/sync', (req, res) => {
     likedRecordIds = [],
     currentCommenterId = null,
     reminderConfig = null,
+    anonymousMessages = [],
+    likedAnonymousMessageIds = [],
     clientLastModified = 0,
   } = req.body || {};
 
@@ -727,6 +846,31 @@ app.post('/api/sync', (req, res) => {
     }
   });
 
+  const existingMessageIds = new Set((serverData.anonymousMessages || []).map(m => m.id));
+  serverData.anonymousMessages = serverData.anonymousMessages || [];
+  anonymousMessages.forEach(msg => {
+    if (!existingMessageIds.has(msg.id)) {
+      serverData.anonymousMessages.unshift({ ...msg });
+    } else {
+      const existing = serverData.anonymousMessages.find(m => m.id === msg.id);
+      if (existing) {
+        existing.likes = Math.max(existing.likes || 0, msg.likes || 0);
+      }
+    }
+  });
+
+  const existingAnonymousLikes = new Set(serverData.likedAnonymousMessageIds || []);
+  serverData.likedAnonymousMessageIds = serverData.likedAnonymousMessageIds || [];
+  likedAnonymousMessageIds.forEach(mid => {
+    if (!existingAnonymousLikes.has(mid)) {
+      serverData.likedAnonymousMessageIds = [...serverData.likedAnonymousMessageIds, mid];
+      const msg = serverData.anonymousMessages.find(m => m.id === mid);
+      if (msg) {
+        msg.likes += 1;
+      }
+    }
+  });
+
   if (currentCommenterId) {
     serverData.currentCommenterId = currentCommenterId;
   }
@@ -739,6 +883,7 @@ app.post('/api/sync', (req, res) => {
   }
 
   serverData.records.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  serverData.anonymousMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   if (writeData(serverData)) {
     res.json({
@@ -750,6 +895,8 @@ app.post('/api/sync', (req, res) => {
       mergedLikedRecordIds: serverData.likedRecordIds || [],
       currentCommenterId: serverData.currentCommenterId,
       mergedReminderConfig: serverData.reminderConfig || DEFAULT_DATA.reminderConfig,
+      mergedAnonymousMessages: serverData.anonymousMessages || [],
+      mergedLikedAnonymousMessageIds: serverData.likedAnonymousMessageIds || [],
       lastModified: serverData._lastModified,
     });
   } else {

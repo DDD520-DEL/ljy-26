@@ -1,4 +1,4 @@
-import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, MonthlyDailyStats, MonthlySummary, MonthlyHeatRanking, AllTimeHeatRanking } from '@/types';
+import type { Employee, WaterRecord, Comment, BucketType, Department, ReminderConfig, MonthlyDailyStats, MonthlySummary, MonthlyHeatRanking, AllTimeHeatRanking, AnonymousMessage, MessageCategory } from '@/types';
 
 const isDev = import.meta.env.DEV;
 export const API_BASE_URL = isDev ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3002');
@@ -10,6 +10,8 @@ export interface ServerData {
   comments: Comment[];
   currentCommenterId: string | null;
   reminderConfig: ReminderConfig;
+  anonymousMessages: AnonymousMessage[];
+  likedAnonymousMessageIds: string[];
   lastModified: number;
 }
 
@@ -20,6 +22,8 @@ export interface SyncRequest {
   likedRecordIds?: string[];
   currentCommenterId?: string | null;
   reminderConfig?: ReminderConfig;
+  anonymousMessages?: AnonymousMessage[];
+  likedAnonymousMessageIds?: string[];
   clientLastModified?: number;
 }
 
@@ -32,6 +36,8 @@ export interface SyncResponse {
   mergedLikedRecordIds: string[];
   currentCommenterId: string | null;
   mergedReminderConfig: ReminderConfig;
+  mergedAnonymousMessages: AnonymousMessage[];
+  mergedLikedAnonymousMessageIds: string[];
   lastModified: number;
 }
 
@@ -191,6 +197,25 @@ export const api = {
     return request<AllTimeHeatRanking>('/api/stats/all-time-heat-ranking', {
       method: 'GET',
     }, 1);
+  },
+
+  async getAnonymousMessages(): Promise<AnonymousMessage[]> {
+    return request<AnonymousMessage[]>('/api/anonymous-messages', {
+      method: 'GET',
+    }, 1);
+  },
+
+  async addAnonymousMessage(data: { id?: string; content: string; category: MessageCategory; timestamp?: string; likes?: number }): Promise<AnonymousMessage> {
+    return request<AnonymousMessage>('/api/anonymous-messages', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async likeAnonymousMessage(id: string): Promise<{ message: AnonymousMessage; liked: boolean }> {
+    return request<{ message: AnonymousMessage; liked: boolean }>(`/api/anonymous-messages/${id}/like`, {
+      method: 'POST',
+    });
   },
 };
 
