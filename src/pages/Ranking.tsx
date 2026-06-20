@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Heart, Users, ChevronDown, BarChart3, Download, Flame, Droplets, MessageCircle, Share2 } from 'lucide-react';
+import { Trophy, Heart, Users, ChevronDown, BarChart3, Download, Flame, Droplets, MessageCircle, Share2, Settings, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { getMonthlyRanking, getAvailableMonths, formatMonthLabel, exportToExcel, formatDateForFilename, type ExportDataItem, getMonthlyHeatRanking, exportHeatToExcel, type HeatExportDataItem, generateWaterRankingImage, generateHeatRankingImage, downloadImage } from '@/utils';
 import type { Department, RankingEntry, HeatRankingEmployee } from '@/types';
@@ -168,7 +168,7 @@ function Top3Heat({ ranking }: { ranking: HeatRankingEmployee[] }) {
 }
 
 export default function Ranking() {
-  const { employees, records, comments } = useAppStore();
+  const { employees, records, comments, clearAllData } = useAppStore();
   const availableMonths = useMemo(() => getAvailableMonths(), []);
 
   const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
@@ -176,6 +176,8 @@ export default function Ranking() {
   const [selectedDept, setSelectedDept] = useState<Department | 'all'>('all');
   const [activeTab, setActiveTab] = useState<RankingTab>('water');
   const [isExportingImage, setIsExportingImage] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const filteredEmployees = useMemo(() => {
     if (selectedDept === 'all') return employees;
@@ -667,6 +669,114 @@ export default function Ranking() {
       )}
 
       <FloatingButton />
+
+      <button
+        onClick={() => setIsSettingsOpen(true)}
+        className="fixed bottom-8 left-8 z-30 w-10 h-10 rounded-full bg-slate-100/80 backdrop-blur-sm text-slate-400 hover:text-slate-600 hover:bg-slate-200/80 transition-all duration-200 flex items-center justify-center shadow-sm"
+        title="数据管理"
+      >
+        <Settings className="w-4 h-4" />
+      </button>
+
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setIsSettingsOpen(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div
+            className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full sm:w-96 max-h-[80vh] overflow-auto shadow-2xl animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 className="font-display text-lg text-slate-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-slate-400" />
+                数据管理
+              </h3>
+              <button onClick={() => setIsSettingsOpen(false)} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-red-700 text-sm mb-1">危险操作区域</h4>
+                    <p className="text-xs text-red-600/70 leading-relaxed">
+                      清空全部数据将删除所有换水记录和人员信息，此操作不可恢复，请谨慎操作。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-500 px-1">
+                  <span>当前换水记录数</span>
+                  <span className="font-display font-semibold text-slate-700">{records.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500 px-1">
+                  <span>当前人员数量</span>
+                  <span className="font-display font-semibold text-slate-700">{employees.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500 px-1">
+                  <span>当前评论数量</span>
+                  <span className="font-display font-semibold text-slate-700">{comments.length}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsConfirmOpen(true);
+                }}
+                disabled={records.length === 0 && employees.length === 0}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                一键清空全部数据
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={() => setIsConfirmOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div
+            className="relative bg-white rounded-3xl w-[90%] max-w-sm shadow-2xl animate-fade-in-up overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="font-display text-xl text-slate-800 mb-2">确认清空数据？</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                此操作将清空所有换水记录（{records.length} 条）和人员数据（{employees.length} 人），且<b className="text-red-500">无法恢复</b>。
+              </p>
+            </div>
+            <div className="flex border-t border-slate-100">
+              <button
+                onClick={() => setIsConfirmOpen(false)}
+                className="flex-1 py-3.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  clearAllData();
+                  setIsConfirmOpen(false);
+                  setIsSettingsOpen(false);
+                }}
+                className="flex-1 py-3.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors border-l border-slate-100"
+              >
+                确认清空
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   );
 }

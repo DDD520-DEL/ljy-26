@@ -42,6 +42,7 @@ interface AppState extends PersistedState {
   refreshFromServer: () => Promise<void>;
   manualSync: () => Promise<void>;
   resetSyncError: () => void;
+  clearAllData: () => void;
 }
 
 function serializeState(state: PersistedState): PersistedStateRaw {
@@ -522,5 +523,24 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   resetSyncError: (): void => {
     set({ initError: null });
+  },
+
+  clearAllData: (): void => {
+    const emptyState: PersistedState = {
+      employees: [],
+      records: [],
+      likedRecords: new Set<string>(),
+      comments: [],
+      currentCommenterId: null,
+      reminderConfig: { ...DEFAULT_REMINDER_CONFIG },
+    };
+    saveToStorage(emptyState);
+    set({
+      ...emptyState,
+      serverLastModified: null,
+      syncState: syncManager.getState(),
+      isInitializing: false,
+      initError: null,
+    });
   },
 }));
